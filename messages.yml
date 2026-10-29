@@ -1,0 +1,70 @@
+# Thông báo AstraXRace. Hỗ trợ mã màu & và hex &#RRGGBB. {placeholder} được thay tự động.
+
+prefix: '&8[&dRace&8] &7'
+
+no-permission: '&cBạn không có quyền.'
+only-player: '&cLệnh này chỉ dùng được trong game.'
+player-offline: '&cNgười chơi không trực tuyến.'
+unknown-race: '&cKhông có chủng tộc &e{race}&c.'
+no-race: '&cBạn chưa chọn chủng tộc. Dùng &e/race &cđể chọn.'
+data-not-loaded: '&cDữ liệu chưa được tải, hãy thử lại sau giây lát.'
+invalid-number: '&cSố không hợp lệ.'
+usage: '&cDùng: &e{usage}'
+reloaded: '&aĐã tải lại cấu hình (dữ liệu người chơi được giữ nguyên).'
+prompt-choose: '&eBạn chưa có chủng tộc! Hãy chọn một chủng tộc để bắt đầu hành trình.'
+
+race-chosen: '&aBạn đã trở thành &r{race}&a!'
+race-same: '&cBạn đang là chủng tộc này rồi.'
+race-no-changes: '&cBạn đã hết số lần đổi chủng tộc.'
+race-set: '&aĐã đặt chủng tộc của &e{player} &athành &r{race}&a.'
+race-set-target: '&7Chủng tộc của bạn đã được đổi thành &r{race}&7.'
+race-reset: '&aĐã đặt lại chủng tộc của &e{player}&a.'
+race-reset-target: '&7Chủng tộc của bạn đã được đặt lại. Hãy chọn lại bằng &e/race&7.'
+exp-given: '&aĐã cộng &e{amount} &aRace EXP cho &e{player}&a.'
+exp-gained: '&d+{amount} Race EXP'
+
+level-up: '&6&lLÊN CẤP! &eChủng tộc của bạn đạt cấp &a{level}&e. &7(+{points} điểm nâng cấp)'
+level-up-title: '&6&lLEVEL UP'
+level-up-subtitle: '&eCấp {level}'
+skill-unlocked: '&dMở khóa kỹ năng mới: &r{skill}'
+
+skill-locked: '&cKỹ năng này mở ở cấp &e{level}&c.'
+skill-cooldown: '&cKỹ năng đang hồi: &e{seconds}s'
+skill-no-energy: '&cKhông đủ năng lượng &7({energy}/{cost})&c.'
+skill-used: '&a✦ {skill}'
+skill-unknown: '&cKhông tìm thấy kỹ năng &e{skill}&c.'
+skill-list-header: '&8&m   &d Kỹ năng của bạn &8&m   '
+skill-list-line: '&e{id} &8- &r{name} &8(Lv {level} | CD {cooldown}s | {cost} NL | {trigger}) {status}'
+skill-status-ready: '&a[Sẵn sàng]'
+skill-status-cooldown: '&c[{seconds}s]'
+skill-status-locked: '&7[Khóa]'
+energy-bar: '&bNăng lượng: &f{energy}&7/&f{max}'
+item-given: '&aĐã nhận Gậy Chủng Tộc.'
+
+upgrade-ok: '&aĐã nâng cấp &e{attr} &alên cấp &e{level}&a.'
+upgrade-max: '&cThuộc tính này đã đạt cấp tối đa.'
+upgrade-no-points: '&cBạn cần &e{cost} &cđiểm nâng cấp.'
+
+info:
+  - '&8&m   &d Thông tin Chủng tộc &8&m   '
+  - '&7Chủng tộc: &r{race}'
+  - '&7Cấp: &a{level} &8| &7EXP: &f{exp}&7/&f{required}'
+  - '&7Điểm nâng cấp: &6{points}'
+  - '&7Máu: &c{health} HP &8| &7Tốc độ: &f{speed}% &8| &7Sức mạnh: &f{strength}%'
+  - '&7Chí mạng: &f{critical}% &8| &7Số lần đổi còn lại: &f{changes_left}'
+
+level-info:
+  - '&8&m   &d Race Level: &e{player} &8&m   '
+  - '&7Chủng tộc: &r{race}'
+  - '&7Cấp: &a{level} &8| &7EXP: &f{exp}&7/&f{required} &8| &7Điểm: &6{points}'
+
+help:
+  - '&8&m   &d AstraXRace &8&m   '
+  - '&e/race &7- Mở GUI chọn chủng tộc'
+  - '&e/race choose <race> &7- Chọn chủng tộc'
+  - '&e/race info &7- Thông tin chủng tộc của bạn'
+  - '&e/race skill [id] &7- Danh sách / dùng kỹ năng'
+  - '&e/race upgrade &7- Nâng cấp thuộc tính'
+  - '&e/race item &7- Nhận Gậy Chủng Tộc'
+  - '&e/race level [người] &7- Xem cấp'
+  - '&c/race reload | set <người> <race> | reset <người> | giveexp <người> <số>'

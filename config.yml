@@ -1,0 +1,231 @@
+# ============================================================
+#  AstraXRace - cấu hình chung
+#  Sửa xong dùng /race reload (đổi storage.type cần restart server)
+# ============================================================
+
+storage:
+  type: sqlite              # sqlite (players.db) | yaml (players.yml)
+  autosave-minutes: 5
+
+race:
+  max-changes: 1            # số lần được ĐỔI race sau lần chọn đầu (-1 = không giới hạn)
+  reset-progress-on-change: true   # đổi race thì reset level/exp/nâng cấp
+  open-gui-on-join: true    # mở GUI chọn race cho người chưa có race
+  open-gui-delay-ticks: 60
+
+leveling:
+  max-level: 50
+  exp-base: 100             # EXP cần để lên cấp 2
+  exp-growth: 1.12          # EXP cần = exp-base * exp-growth^(cấp-1)
+  points-per-level: 1       # điểm nâng cấp nhận mỗi cấp
+  starting-points: 0
+  skill-power-per-level: 0.005   # +0.5% sức mạnh skill mỗi cấp race
+  level-up-sound: entity.player.levelup
+
+exp:
+  mob-default: 5            # Race EXP khi giết quái hostile/boss
+  mobs:                     # ghi đè theo EntityType
+    ZOMBIE: 6
+    SKELETON: 6
+    CREEPER: 8
+    ENDERMAN: 12
+    WITCH: 15
+    BLAZE: 12
+    WITHER_SKELETON: 20
+    ELDER_GUARDIAN: 200
+    WARDEN: 500
+    WITHER: 600
+    ENDER_DRAGON: 1000
+  player-kill: 40
+  show-actionbar: true
+
+combat:
+  critical-multiplier: 1.5  # nhân sát thương khi chí mạng
+  critical-sound: entity.player.attack.crit
+
+energy:
+  enabled: true
+  max: 100
+  per-level: 1.0            # +1 năng lượng tối đa mỗi cấp
+  regen-per-second: 3.0
+  show-actionbar-when-holding-item: true
+
+# Vật phẩm kích hoạt skill: chuột phải = skill trigger RIGHT_CLICK, Shift + chuột phải = SHIFT_RIGHT_CLICK
+skill-item:
+  enabled: true
+  require-item: true        # false = chuột phải bất kỳ (tay không) cũng kích hoạt (không khuyến nghị)
+  give-on-choose: true
+  give-on-respawn: true
+  material: BLAZE_ROD
+  name: '&6&lGậy Chủng Tộc'
+  lore:
+    - '&7Chuột phải: &fKỹ năng 1'
+    - '&7Shift + Chuột phải: &fKỹ năng 2'
+    - '&8/race skill <tên> cho kỹ năng khác'
+  glow: true
+
+# ---------------- Cosmetic nhận dạng (cánh, vật phẩm đi theo, đuôi) ----------------
+# Định nghĩa từng race nằm trong races.yml (mục cosmetic). Cosmetic dùng ItemDisplay,
+# không lưu xuống đĩa và tự dọn khi người chơi thoát / đổi race / tắt plugin.
+cosmetic:
+  enabled: true
+  update-ticks: 2            # chu kỳ cập nhật (1-10). Nhỏ = mượt hơn nhưng tốn tài nguyên hơn
+  view-range: 0.6            # tầm nhìn của entity (0.6 ~ 38 block)
+  hide-when-gliding: true    # ẩn khi đang lướt bằng Elytra
+  hide-when-invisible: true  # ẩn khi người chơi tàng hình (potion)
+  sneak-drop: 0.2            # hạ thấp cosmetic khi ngồi xuống (Shift)
+
+# ---------------- Nâng cấp thuộc tính ----------------
+# per-level: giá trị cộng thêm mỗi cấp nâng cấp
+#   strength   : +hệ số sát thương (0.02 = +2%)
+#   defense    : giảm sát thương nhận (0.015 = -1.5%)
+#   speed      : +hệ số tốc độ di chuyển
+#   health     : +máu (HP, 2 HP = 1 tim)
+#   critical   : +tỉ lệ chí mạng (0.01 = +1%)
+#   skill_power: +hệ số sức mạnh skill
+upgrades:
+  strength:
+    slot: 10
+    material: IRON_SWORD
+    name: '&c&lStrength'
+    description: '&7Tăng sát thương gây ra.'
+    max-level: 10
+    cost: 1
+    per-level: 0.02
+    display-multiplier: 100
+    unit: '%'
+    lore: ['{desc}', ' ', '&7Cấp: &f{level}&7/&f{max}', '&7Hiện tại: &a+{bonus}', '&7Mỗi cấp: &e+{per}', '&7Giá: &6{cost} điểm']
+  defense:
+    slot: 11
+    material: SHIELD
+    name: '&9&lDefense'
+    description: '&7Giảm sát thương nhận vào.'
+    max-level: 10
+    cost: 1
+    per-level: 0.015
+    display-multiplier: 100
+    unit: '%'
+    lore: ['{desc}', ' ', '&7Cấp: &f{level}&7/&f{max}', '&7Hiện tại: &a-{bonus}', '&7Mỗi cấp: &e-{per}', '&7Giá: &6{cost} điểm']
+  speed:
+    slot: 12
+    material: SUGAR
+    name: '&f&lSpeed'
+    description: '&7Tăng tốc độ di chuyển.'
+    max-level: 10
+    cost: 1
+    per-level: 0.01
+    display-multiplier: 100
+    unit: '%'
+    lore: ['{desc}', ' ', '&7Cấp: &f{level}&7/&f{max}', '&7Hiện tại: &a+{bonus}', '&7Mỗi cấp: &e+{per}', '&7Giá: &6{cost} điểm']
+  health:
+    slot: 14
+    material: GOLDEN_APPLE
+    name: '&a&lHealth'
+    description: '&7Tăng máu tối đa.'
+    max-level: 10
+    cost: 1
+    per-level: 1.0
+    display-multiplier: 1
+    unit: ' HP'
+    lore: ['{desc}', ' ', '&7Cấp: &f{level}&7/&f{max}', '&7Hiện tại: &a+{bonus}', '&7Mỗi cấp: &e+{per}', '&7Giá: &6{cost} điểm']
+  critical:
+    slot: 15
+    material: GOLDEN_SWORD
+    name: '&6&lCritical'
+    description: '&7Tăng tỉ lệ chí mạng.'
+    max-level: 10
+    cost: 1
+    per-level: 0.01
+    display-multiplier: 100
+    unit: '%'
+    lore: ['{desc}', ' ', '&7Cấp: &f{level}&7/&f{max}', '&7Hiện tại: &a+{bonus}', '&7Mỗi cấp: &e+{per}', '&7Giá: &6{cost} điểm']
+  skill_power:
+    slot: 16
+    material: BLAZE_POWDER
+    name: '&d&lSkill Power'
+    description: '&7Tăng sát thương/hồi máu của kỹ năng.'
+    max-level: 10
+    cost: 1
+    per-level: 0.03
+    display-multiplier: 100
+    unit: '%'
+    lore: ['{desc}', ' ', '&7Cấp: &f{level}&7/&f{max}', '&7Hiện tại: &a+{bonus}', '&7Mỗi cấp: &e+{per}', '&7Giá: &6{cost} điểm']
+
+# ---------------- GUI ----------------
+gui:
+  filler:
+    material: GRAY_STAINED_GLASS_PANE
+    name: ' '
+  main:
+    title: '&8Chọn Chủng tộc'
+    rows: 4
+    status-current: '&a✔ Chủng tộc hiện tại của bạn'
+    status-other: '&7Click để xem chi tiết'
+    lore: []
+    close:
+      slot: 31
+      material: BARRIER
+      name: '&cĐóng'
+  detail:
+    title: '&8Chủng tộc: {race}'
+    rows: 5
+    info-slot: 4
+    stats:
+      slot: 19
+      material: IRON_SWORD
+      name: '&6&lChỉ số'
+      lore:
+        - '&7Máu: &c{health} HP &8({hearts} tim)'
+        - '&7Tốc độ: &f{speed}%'
+        - '&7Sức mạnh: &f{strength}%'
+        - '&7Nhảy cao: &f+{jump}%'
+        - '&7Kháng knockback: &f{knockback}%'
+        - '&7Chí mạng: &f{critical}%'
+    skills:
+      slot: 21
+      material: BLAZE_POWDER
+      name: '&d&lKỹ năng'
+      line: '&e{name} &8(Lv {level} | CD {cooldown}s | {trigger})'
+      desc-prefix: '  &7'
+    strengths:
+      slot: 23
+      material: LIME_DYE
+      name: '&a&lĐiểm mạnh'
+      prefix: '&a+ &7'
+    weaknesses:
+      slot: 25
+      material: RED_DYE
+      name: '&c&lĐiểm yếu'
+      prefix: '&c- &7'
+    back:
+      slot: 36
+      material: ARROW
+      name: '&7« Quay lại'
+    confirm:
+      slot: 40
+      material: EMERALD_BLOCK
+      name: '&a&lXÁC NHẬN CHỌN &r{race}'
+      glow: true
+      lore:
+        - '&7Click để chọn chủng tộc này.'
+        - '&8Số lần đổi còn lại: &f{changes_left}'
+    close:
+      slot: 44
+      material: BARRIER
+      name: '&cĐóng'
+  upgrade:
+    title: '&8Nâng cấp Chủng tộc'
+    rows: 3
+    click-line: '&aClick trái để nâng cấp'
+    maxed-line: '&6★ Đã đạt cấp tối đa'
+    info:
+      slot: 4
+      material: NETHER_STAR
+      name: '&b&lCấp {level} &7- {race}'
+      lore:
+        - '&7EXP: &f{exp}&7/&f{required}'
+        - '&7Điểm kỹ năng: &6{points}'
+    close:
+      slot: 22
+      material: BARRIER
+      name: '&cĐóng'

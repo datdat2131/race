@@ -1,0 +1,779 @@
+# ============================================================
+#  AstraXRace - định nghĩa chủng tộc & kỹ năng
+#
+#  stats:   health (HP, 20 = 10 tim), speed (1.0 = bình thường), strength (hệ số sát thương),
+#           jump (+% độ cao nhảy, 0.2 = +20%), knockback-resistance (0..1), critical-chance (0..1)
+#  growth:  chỉ số cộng thêm MỖI cấp race
+#  passives: nội tại (xem README)
+#  cosmetic: cánh / vật phẩm đi theo / đuôi nhận dạng (xem README mục Cosmetic)
+#  skills.<id>.type: AOE_DAMAGE | SELF_BUFF | HEAL | DASH | NO_FALL
+#  skills.<id>.trigger: RIGHT_CLICK | SHIFT_RIGHT_CLICK | COMMAND (/race skill <id>)
+#  Hiệu ứng potion dùng ID Minecraft: SPEED, STRENGTH, RESISTANCE, REGENERATION, WITHER,
+#  SLOWNESS, JUMP_BOOST, ABSORPTION, SLOW_FALLING... ; riêng type FIRE = đốt cháy (duration = tick)
+# ============================================================
+
+races:
+
+  human:
+    display-name: '&f&lHuman'
+    icon: PLAYER_HEAD
+    gui-slot: 10
+    description:
+      - '&7Chủng tộc cân bằng, thích nghi'
+      - '&7tốt với mọi hoàn cảnh.'
+    stats: {health: 20.0, speed: 1.0, strength: 1.0, jump: 0.0, knockback-resistance: 0.0, critical-chance: 0.05}
+    growth: {health: 0.2, speed: 0.0005, strength: 0.005}
+    strengths:
+      - 'Cân bằng tất cả chỉ số'
+      - 'Nhận thêm 10% EXP (Race EXP và EXP thường)'
+    weaknesses:
+      - 'Không có điểm yếu rõ rệt (cũng không có điểm vượt trội)'
+    passives:
+      exp-bonus: 0.10
+      vanilla-exp-bonus: 0.10
+    cosmetic:
+      parts:
+        shield:
+          type: FIXED
+          item: SHIELD
+          scale: 0.9
+          up: 1.3
+          back: 0.22
+          owner-visible: true
+    skills:
+      second-wind:
+        type: HEAL
+        name: '&aSecond Wind'
+        description: ['Hồi một lượng máu cho bản thân.']
+        unlock-level: 1
+        cooldown: 45
+        energy-cost: 30
+        trigger: RIGHT_CLICK
+        params: {amount: 6.0, radius: 0, cleanse: []}
+        effects:
+          sound: {key: entity.player.levelup, volume: 0.8, pitch: 1.4}
+          particle: {type: HEART, count: 8, spread: 0.5, speed: 0}
+          animation: {type: SPIRAL, particle: HAPPY_VILLAGER, radius: 1.0, duration: 20, height: 2.0}
+      adrenaline:
+        type: SELF_BUFF
+        name: '&eAdrenaline'
+        description: ['Tăng tốc độ và sức mạnh trong vài giây.']
+        unlock-level: 10
+        cooldown: 60
+        energy-cost: 40
+        trigger: SHIFT_RIGHT_CLICK
+        params:
+          effects:
+            - {type: SPEED, duration: 160, amplifier: 1}
+            - {type: STRENGTH, duration: 160, amplifier: 0}
+        effects:
+          sound: {key: entity.horse.gallop, volume: 1.0, pitch: 1.2}
+          particle: {type: CRIT, count: 25, spread: 0.6, speed: 0.1}
+          animation: {type: RING, particle: CRIT, radius: 1.5, duration: 10}
+
+  elf:
+    display-name: '&a&lElf'
+    icon: BOW
+    gui-slot: 11
+    description:
+      - '&7Cung thủ nhanh nhẹn của rừng xanh,'
+      - '&7mong manh nhưng linh hoạt.'
+    stats: {health: 16.0, speed: 1.10, strength: 1.0, jump: 0.2, knockback-resistance: 0.0, critical-chance: 0.05}
+    growth: {health: 0.15, speed: 0.0005, strength: 0.004}
+    strengths:
+      - 'Tốc độ di chuyển +10%'
+      - 'Nhảy cao hơn'
+      - 'Sát thương cung +20%'
+    weaknesses:
+      - 'Máu thấp hơn Human (-2 tim)'
+    passives:
+      bow-damage-multiplier: 1.20
+    cosmetic:
+      parts:
+        leaf-wings:
+          type: FIXED
+          item: FEATHER
+          mirror: true
+          scale: 1.5
+          side: 0.1
+          up: 1.2
+          back: 0.2
+          tilt: 25
+          spread: 25
+          pivot: 1.0
+          flap: {amplitude: 10, speed: 0.15, air-multiplier: 1.8}
+        bow:
+          type: FIXED
+          item: BOW
+          scale: 0.8
+          up: 1.0
+          back: 0.3
+          tilt: 40
+      particles:
+        sparkle: {type: HAPPY_VILLAGER, count: 1, spread: 0.4, speed: 0, interval: 20, at: BACK, moving-only: true}
+    skills:
+      wind-dash:
+        type: DASH
+        name: '&bWind Dash'
+        description: ['Lao nhanh về phía trước.']
+        unlock-level: 1
+        cooldown: 8
+        energy-cost: 15
+        trigger: RIGHT_CLICK
+        params: {forward: 1.8, up: 0.3}
+        effects:
+          sound: {key: entity.phantom.flap, volume: 1.0, pitch: 1.5}
+          particle: {type: CLOUD, count: 20, spread: 0.4, speed: 0.05}
+          animation: {type: RING, particle: CLOUD, radius: 1.5, duration: 8}
+      natures-grace:
+        type: SELF_BUFF
+        name: '&aNature''s Grace'
+        description: ['Nhảy cao, hồi máu nhẹ và chạy nhanh.']
+        unlock-level: 10
+        cooldown: 50
+        energy-cost: 35
+        trigger: SHIFT_RIGHT_CLICK
+        params:
+          effects:
+            - {type: JUMP_BOOST, duration: 200, amplifier: 1}
+            - {type: REGENERATION, duration: 100, amplifier: 0}
+            - {type: SPEED, duration: 200, amplifier: 0}
+        effects:
+          sound: {key: block.amethyst_block.chime, volume: 1.0, pitch: 1.0}
+          particle: {type: HAPPY_VILLAGER, count: 25, spread: 0.7, speed: 0}
+          animation: {type: SPIRAL, particle: HAPPY_VILLAGER, radius: 1.2, duration: 25, height: 2.2}
+
+  dwarf:
+    display-name: '&6&lDwarf'
+    icon: IRON_PICKAXE
+    gui-slot: 12
+    description:
+      - '&7Chiến binh lùn bền bỉ,'
+      - '&7mạnh nhất khi ở dưới lòng đất.'
+    stats: {health: 28.0, speed: 0.90, strength: 1.0, jump: 0.0, knockback-resistance: 0.5, critical-chance: 0.03}
+    growth: {health: 0.3, speed: 0.0003, strength: 0.005}
+    strengths:
+      - 'Máu +4 tim so với Human'
+      - 'Kháng knockback 50%'
+      - 'Sát thương +25% khi ở dưới lòng đất (Y <= 50)'
+    weaknesses:
+      - 'Tốc độ di chuyển thấp (-10%)'
+    passives:
+      underground:
+        max-y: 50
+        damage-multiplier: 1.25
+    cosmetic:
+      parts:
+        pickaxe:
+          type: FIXED
+          item: IRON_PICKAXE
+          scale: 1.0
+          up: 1.25
+          back: 0.25
+          tilt: 45
+        lantern:
+          type: FOLLOWER
+          item: LANTERN
+          scale: 0.35
+          side: 0.7
+          up: 1.9
+          back: 0.4
+          follow-speed: 0.2
+          bob: {amplitude: 0.06, speed: 0.12}
+          billboard: CENTER
+      particles:
+        ember: {type: SMALL_FLAME, count: 1, spread: 0.15, speed: 0.01, interval: 10, at: BACK}
+    skills:
+      earthquake:
+        type: AOE_DAMAGE
+        name: '&6Earthquake'
+        description: ['Rung chuyển mặt đất, gây sát thương và làm chậm kẻ địch.']
+        unlock-level: 1
+        cooldown: 14
+        energy-cost: 30
+        trigger: RIGHT_CLICK
+        params:
+          radius: 5.0
+          damage: 6.0
+          knockback: 0.5
+          affect-players: true
+          affect-mobs: true
+          effects:
+            - {type: SLOWNESS, duration: 80, amplifier: 1}
+        effects:
+          sound: {key: entity.generic.explode, volume: 0.8, pitch: 0.6}
+          particle: {type: EXPLOSION, count: 3, spread: 1.5, speed: 0}
+          animation: {type: RING, particle: CRIT, radius: 5.0, duration: 12}
+      stone-skin:
+        type: SELF_BUFF
+        name: '&7Stone Skin'
+        description: ['Da hóa đá: kháng sát thương và giáp ảo.']
+        unlock-level: 10
+        cooldown: 60
+        energy-cost: 40
+        trigger: SHIFT_RIGHT_CLICK
+        params:
+          effects:
+            - {type: RESISTANCE, duration: 200, amplifier: 1}
+            - {type: ABSORPTION, duration: 200, amplifier: 1}
+        effects:
+          sound: {key: block.stone.break, volume: 1.0, pitch: 0.7}
+          particle: {type: CRIT, count: 30, spread: 0.6, speed: 0.1}
+          animation: {type: BURST, particle: CRIT, radius: 1.5, duration: 10}
+
+  orc:
+    display-name: '&2&lOrc'
+    icon: NETHERITE_AXE
+    gui-slot: 13
+    description:
+      - '&7Chiến binh hoang dã, càng bị thương'
+      - '&7càng nguy hiểm.'
+    stats: {health: 22.0, speed: 0.92, strength: 1.0, jump: 0.0, knockback-resistance: 0.1, critical-chance: 0.05}
+    growth: {health: 0.25, speed: 0.0003, strength: 0.006}
+    strengths:
+      - 'Sát thương cận chiến +15%'
+      - 'Khi máu <= 35%: sát thương +25%'
+    weaknesses:
+      - 'Tốc độ di chuyển thấp hơn (-8%)'
+    passives:
+      melee-damage-multiplier: 1.15
+      low-health:
+        threshold: 0.35
+        damage-multiplier: 1.25
+    cosmetic:
+      parts:
+        crossed-axes:
+          type: FIXED
+          item: NETHERITE_AXE
+          mirror: true
+          scale: 1.1
+          up: 1.25
+          back: 0.25
+          tilt: 40
+    skills:
+      battle-cry:
+        type: SELF_BUFF
+        name: '&cBattle Cry'
+        description: ['Gầm thét: tăng mạnh sức mạnh và hồi một ít máu.']
+        unlock-level: 1
+        cooldown: 40
+        energy-cost: 35
+        trigger: RIGHT_CLICK
+        params:
+          heal: 2.0
+          effects:
+            - {type: STRENGTH, duration: 200, amplifier: 1}
+            - {type: RESISTANCE, duration: 100, amplifier: 0}
+        effects:
+          sound: {key: entity.ravager.roar, volume: 1.0, pitch: 1.0}
+          particle: {type: ANGRY_VILLAGER, count: 10, spread: 0.6, speed: 0}
+          animation: {type: RING, particle: CRIT, radius: 2.0, duration: 10}
+      ground-smash:
+        type: AOE_DAMAGE
+        name: '&4Ground Smash'
+        description: ['Đập mạnh xuống đất, hất tung kẻ địch.']
+        unlock-level: 10
+        cooldown: 20
+        energy-cost: 45
+        trigger: SHIFT_RIGHT_CLICK
+        params:
+          radius: 4.5
+          damage: 9.0
+          knockback: 1.0
+          affect-players: true
+          affect-mobs: true
+          effects: []
+        effects:
+          sound: {key: entity.iron_golem.attack, volume: 1.0, pitch: 0.6}
+          particle: {type: EXPLOSION, count: 2, spread: 1.0, speed: 0}
+          animation: {type: RING, particle: CRIT, radius: 4.5, duration: 10}
+
+  demon:
+    display-name: '&c&lDemon'
+    icon: NETHERRACK
+    gui-slot: 14
+    description:
+      - '&7Sinh vật địa ngục, thiêu đốt và'
+      - '&7nguyền rủa kẻ thù.'
+    stats: {health: 20.0, speed: 1.0, strength: 1.0, jump: 0.0, knockback-resistance: 0.0, critical-chance: 0.05}
+    growth: {health: 0.2, speed: 0.0004, strength: 0.005}
+    strengths:
+      - 'Đòn đánh có cơ hội gây Wither / thiêu cháy đối thủ'
+      - 'Miễn nhiễm sát thương lửa & dung nham'
+      - 'Skill Hellfire Burst thiêu đốt diện rộng'
+    weaknesses:
+      - 'Nhận thêm 30% sát thương từ Holy/Light (Angel, Holy Nova)'
+    passives:
+      on-hit:
+        - {type: WITHER, duration: 60, amplifier: 0, chance: 0.15}
+        - {type: FIRE, duration: 80, chance: 0.20}
+      damage-taken: {FIRE: 0.0, FIRE_TICK: 0.0, LAVA: 0.0, HOT_FLOOR: 0.0}
+      weak-to: {HOLY: 1.3}
+    cosmetic:
+      parts:
+        wings:
+          type: FIXED
+          item: PHANTOM_MEMBRANE
+          mirror: true
+          scale: 1.7
+          side: 0.1
+          up: 1.2
+          back: 0.2
+          tilt: 30
+          spread: 35
+          pivot: 1.0
+          flap: {amplitude: 15, speed: 0.18, air-multiplier: 2.0}
+        skull:
+          type: FOLLOWER
+          item: WITHER_SKELETON_SKULL
+          scale: 0.4
+          side: -0.8
+          up: 1.9
+          back: 0.5
+          follow-speed: 0.22
+          bob: {amplitude: 0.07, speed: 0.14}
+          billboard: CENTER
+      particles:
+        flames: {type: FLAME, count: 2, spread: 0.3, speed: 0.01, interval: 4, at: BACK, moving-only: true}
+        souls: {type: SOUL_FIRE_FLAME, count: 1, spread: 0.2, speed: 0.01, interval: 10, at: BACK}
+    skills:
+      hellfire-burst:
+        type: AOE_DAMAGE
+        name: '&cHellfire Burst'
+        description: ['Phun lửa địa ngục: sát thương, thiêu cháy và Wither.']
+        unlock-level: 1
+        cooldown: 12
+        energy-cost: 30
+        trigger: RIGHT_CLICK
+        params:
+          radius: 6.0
+          damage: 7.0
+          fire-ticks: 100
+          knockback: 0.4
+          affect-players: true
+          affect-mobs: true
+          effects:
+            - {type: WITHER, duration: 80, amplifier: 0}
+        effects:
+          sound: {key: entity.blaze.shoot, volume: 1.0, pitch: 0.7}
+          particle: {type: FLAME, count: 60, spread: 1.5, speed: 0.08}
+          animation: {type: RING, particle: FLAME, radius: 6.0, duration: 14}
+      infernal-leap:
+        type: DASH
+        name: '&6Infernal Leap'
+        description: ['Bật nhảy cao về phía trước trong biển lửa.']
+        unlock-level: 10
+        cooldown: 15
+        energy-cost: 25
+        trigger: SHIFT_RIGHT_CLICK
+        params: {forward: 1.4, up: 1.0}
+        effects:
+          sound: {key: entity.ghast.shoot, volume: 0.8, pitch: 1.2}
+          particle: {type: FLAME, count: 40, spread: 0.5, speed: 0.1}
+          animation: {type: SPIRAL, particle: SOUL_FIRE_FLAME, radius: 1.0, duration: 16, height: 2.0}
+
+  angel:
+    display-name: '&e&lAngel'
+    icon: FEATHER
+    gui-slot: 15
+    description:
+      - '&7Sứ giả ánh sáng, chữa lành đồng đội'
+      - '&7và hóa giải bóng tối.'
+    stats: {health: 20.0, speed: 1.02, strength: 1.0, jump: 0.05, knockback-resistance: 0.0, critical-chance: 0.04}
+    growth: {health: 0.2, speed: 0.0004, strength: 0.004}
+    strengths:
+      - 'Hồi máu cho bản thân & đồng đội xung quanh'
+      - 'Chống rơi trong thời gian ngắn'
+      - 'Kháng Poison, Wither, Blindness, Nausea'
+      - 'Sát thương Holy gây thêm sát thương lên Demon'
+    weaknesses:
+      - 'Sát thương cận chiến thấp hơn (-15%)'
+    passives:
+      melee-damage-multiplier: 0.85
+      immune-effects: [POISON, WITHER, BLINDNESS, NAUSEA]
+      damage-tags: [HOLY]
+    cosmetic:
+      parts:
+        wings:
+          type: FIXED
+          item: FEATHER
+          mirror: true
+          scale: 2.3
+          side: 0.1
+          up: 1.25
+          back: 0.2
+          tilt: 20
+          spread: 20
+          pivot: 1.0
+          flap: {amplitude: 14, speed: 0.14, air-multiplier: 2.2}
+        halo:
+          type: FIXED
+          item: GOLD_NUGGET
+          scale: 1.0
+          up: 2.35
+          back: 0.0
+          pitch: 90
+      particles:
+        glow: {type: END_ROD, count: 1, spread: 0.4, speed: 0.01, interval: 12, at: BACK}
+    skills:
+      divine-heal:
+        type: HEAL
+        name: '&eDivine Heal'
+        description: ['Hồi máu cho bản thân và người xung quanh, giải trừ hiệu ứng xấu.']
+        unlock-level: 1
+        cooldown: 25
+        energy-cost: 35
+        trigger: RIGHT_CLICK
+        params: {amount: 8.0, radius: 6.0, cleanse: [POISON, WITHER, WEAKNESS, SLOWNESS]}
+        effects:
+          sound: {key: block.beacon.activate, volume: 1.0, pitch: 1.6}
+          particle: {type: HEART, count: 10, spread: 0.6, speed: 0}
+          animation: {type: SPIRAL, particle: END_ROD, radius: 1.2, duration: 25, height: 2.5}
+      featherfall:
+        type: NO_FALL
+        name: '&fFeatherfall'
+        description: ['Miễn sát thương rơi trong vài giây.']
+        unlock-level: 5
+        cooldown: 30
+        energy-cost: 20
+        trigger: SHIFT_RIGHT_CLICK
+        params: {duration-ticks: 140, slow-falling: true}
+        effects:
+          sound: {key: entity.phantom.flap, volume: 1.0, pitch: 1.8}
+          particle: {type: CLOUD, count: 25, spread: 0.6, speed: 0.02}
+          animation: {type: RING, particle: END_ROD, radius: 1.2, duration: 10}
+      holy-nova:
+        type: AOE_DAMAGE
+        name: '&6Holy Nova'
+        description: ['Bùng nổ ánh sáng thần thánh. Gây thêm sát thương lên Demon.']
+        unlock-level: 15
+        cooldown: 30
+        energy-cost: 50
+        trigger: COMMAND
+        tags: [HOLY]
+        params:
+          radius: 6.0
+          damage: 6.0
+          knockback: 0.3
+          affect-players: true
+          affect-mobs: true
+          effects:
+            - {type: GLOWING, duration: 100, amplifier: 0}
+        effects:
+          sound: {key: block.beacon.power_select, volume: 1.0, pitch: 1.2}
+          particle: {type: END_ROD, count: 50, spread: 1.5, speed: 0.1}
+          animation: {type: BURST, particle: END_ROD, radius: 6.0, duration: 14}
+
+  dragon:
+    display-name: '&5&lDragon'
+    icon: DRAGON_HEAD
+    gui-slot: 20
+    description:
+      - '&7Hậu duệ của Ender Dragon, đôi cánh'
+      - '&7bóng tối che phủ cả bầu trời.'
+    stats: {health: 26.0, speed: 0.97, strength: 1.08, jump: 0.1, knockback-resistance: 0.25, critical-chance: 0.04}
+    growth: {health: 0.3, speed: 0.0003, strength: 0.006}
+    strengths:
+      - 'Máu +3 tim so với Human'
+      - 'Giảm 50% sát thương rơi, miễn nhiễm Dragon Breath'
+      - 'Hơi thở rồng: sát thương + thiêu đốt diện rộng'
+      - 'Đòn đánh có cơ hội thiêu cháy đối thủ'
+      - 'Cánh rồng Ender sau lưng'
+    weaknesses:
+      - 'Nhận thêm 25% sát thương từ Water (tộc Fish)'
+      - 'Di chuyển nặng nề (-3% tốc độ)'
+    passives:
+      damage-taken: {FALL: 0.5, DRAGON_BREATH: 0.0}
+      weak-to: {WATER: 1.25}
+      damage-tags: [FIRE]
+      on-hit:
+        - {type: FIRE, duration: 60, chance: 0.15}
+    cosmetic:
+      parts:
+        wings:
+          type: FIXED
+          item: ELYTRA
+          mirror: true
+          scale: 2.0
+          side: 0.1
+          up: 1.25
+          back: 0.2
+          tilt: 20
+          spread: 30
+          pivot: 1.0
+          flap: {amplitude: 22, speed: 0.22, air-multiplier: 2.0}
+        head:
+          type: FOLLOWER
+          item: DRAGON_HEAD
+          scale: 0.45
+          side: 0.8
+          up: 1.9
+          back: 0.5
+          follow-speed: 0.22
+          bob: {amplitude: 0.08, speed: 0.15}
+          billboard: CENTER
+      particles:
+        ender: {type: PORTAL, count: 6, spread: 0.5, speed: 0.4, interval: 6, at: BACK}
+    skills:
+      ender-breath:
+        type: AOE_DAMAGE
+        name: '&5Ender Breath'
+        description: ['Phun hơi thở rồng: sát thương, thiêu đốt và làm yếu kẻ địch.']
+        unlock-level: 1
+        cooldown: 14
+        energy-cost: 35
+        trigger: RIGHT_CLICK
+        tags: [FIRE]
+        params:
+          radius: 6.0
+          damage: 8.0
+          fire-ticks: 60
+          knockback: 0.5
+          affect-players: true
+          affect-mobs: true
+          effects:
+            - {type: WEAKNESS, duration: 100, amplifier: 0}
+        effects:
+          sound: {key: entity.ender_dragon.growl, volume: 0.9, pitch: 1.0}
+          particle: {type: DRAGON_BREATH, count: 60, spread: 1.5, speed: 0.05}
+          animation: {type: RING, particle: DRAGON_BREATH, radius: 6.0, duration: 14}
+      wing-burst:
+        type: DASH
+        name: '&dWing Burst'
+        description: ['Vỗ cánh bật mạnh về phía trước.']
+        unlock-level: 1
+        cooldown: 12
+        energy-cost: 25
+        trigger: SHIFT_RIGHT_CLICK
+        params: {forward: 2.2, up: 0.9}
+        effects:
+          sound: {key: entity.ender_dragon.flap, volume: 1.0, pitch: 1.0}
+          particle: {type: PORTAL, count: 40, spread: 0.6, speed: 0.5}
+          animation: {type: SPIRAL, particle: PORTAL, radius: 1.2, duration: 16, height: 2.2}
+      dragon-flight:
+        type: NO_FALL
+        name: '&5Dragon Flight'
+        description: ['Lướt nhẹ trên không, miễn sát thương rơi.']
+        unlock-level: 10
+        cooldown: 40
+        energy-cost: 30
+        trigger: COMMAND
+        params: {duration-ticks: 200, slow-falling: true}
+        effects:
+          sound: {key: entity.ender_dragon.flap, volume: 0.8, pitch: 1.3}
+          particle: {type: END_ROD, count: 25, spread: 0.7, speed: 0.02}
+          animation: {type: RING, particle: PORTAL, radius: 1.5, duration: 12}
+
+  fish:
+    display-name: '&b&lFish'
+    icon: TROPICAL_FISH
+    gui-slot: 22
+    description:
+      - '&7Sinh vật của đại dương, nhanh và'
+      - '&7mạnh mẽ khi ở dưới nước.'
+    stats: {health: 18.0, speed: 0.95, strength: 1.0, jump: 0.0, knockback-resistance: 0.0, critical-chance: 0.04}
+    growth: {health: 0.2, speed: 0.0004, strength: 0.005}
+    strengths:
+      - 'Dưới nước: thở được, bơi nhanh, nhìn rõ'
+      - 'Sát thương +20% khi ở dưới nước'
+      - 'Miễn nhiễm chết đuối'
+      - 'Sát thương Water gây thêm sát thương lên Dragon'
+    weaknesses:
+      - 'Chậm hơn trên cạn (-5% tốc độ), máu thấp hơn Human'
+      - 'Nhận thêm 25% sát thương từ Venom (tộc Snake)'
+    passives:
+      water-effects:
+        - {type: WATER_BREATHING, duration: 100, amplifier: 0}
+        - {type: DOLPHINS_GRACE, duration: 100, amplifier: 0}
+        - {type: NIGHT_VISION, duration: 260, amplifier: 0}
+      water-damage-multiplier: 1.2
+      damage-taken: {DROWNING: 0.0}
+      damage-tags: [WATER]
+      weak-to: {VENOM: 1.25}
+    cosmetic:
+      parts:
+        fins:
+          type: FIXED
+          item: PRISMARINE_SHARD
+          mirror: true
+          scale: 1.1
+          side: 0.15
+          up: 1.15
+          back: 0.2
+          tilt: 35
+          spread: 20
+          pivot: 1.0
+          flap: {amplitude: 12, speed: 0.15, air-multiplier: 1.5}
+        tropical:
+          type: FOLLOWER
+          item: TROPICAL_FISH
+          scale: 0.5
+          side: 0.7
+          up: 1.7
+          back: 0.6
+          follow-speed: 0.18
+          bob: {amplitude: 0.1, speed: 0.12}
+          billboard: CENTER
+        cod:
+          type: FOLLOWER
+          item: COD
+          scale: 0.5
+          side: -0.7
+          up: 1.4
+          back: 0.9
+          follow-speed: 0.16
+          bob: {amplitude: 0.1, speed: 0.1}
+          billboard: CENTER
+        salmon:
+          type: FOLLOWER
+          item: SALMON
+          scale: 0.5
+          side: 0.1
+          up: 2.1
+          back: 1.0
+          follow-speed: 0.14
+          bob: {amplitude: 0.12, speed: 0.09}
+          billboard: CENTER
+      particles:
+        bubbles: {type: BUBBLE_POP, count: 2, spread: 0.4, speed: 0.01, interval: 6, at: BACK}
+        splash: {type: SPLASH, count: 3, spread: 0.3, speed: 0.01, interval: 8, at: BACK, moving-only: true}
+    skills:
+      tidal-wave:
+        type: AOE_DAMAGE
+        name: '&bTidal Wave'
+        description: ['Sóng thần: sát thương Water, đẩy lùi và làm chậm.']
+        unlock-level: 1
+        cooldown: 14
+        energy-cost: 30
+        trigger: RIGHT_CLICK
+        tags: [WATER]
+        params:
+          radius: 5.0
+          damage: 6.0
+          knockback: 1.3
+          affect-players: true
+          affect-mobs: true
+          effects:
+            - {type: SLOWNESS, duration: 60, amplifier: 0}
+        effects:
+          sound: {key: entity.dolphin.splash, volume: 1.0, pitch: 0.8}
+          particle: {type: SPLASH, count: 80, spread: 2.0, speed: 0.1}
+          animation: {type: RING, particle: BUBBLE_POP, radius: 5.0, duration: 12}
+      torrent-dash:
+        type: DASH
+        name: '&3Torrent Dash'
+        description: ['Phóng nhanh như cá lao qua dòng nước.']
+        unlock-level: 1
+        cooldown: 8
+        energy-cost: 20
+        trigger: SHIFT_RIGHT_CLICK
+        params: {forward: 2.2, up: 0.15}
+        effects:
+          sound: {key: entity.dolphin.jump, volume: 1.0, pitch: 1.2}
+          particle: {type: SPLASH, count: 30, spread: 0.5, speed: 0.1}
+          animation: {type: RING, particle: BUBBLE_POP, radius: 1.5, duration: 8}
+      aqua-heal:
+        type: HEAL
+        name: '&9Aqua Heal'
+        description: ['Dòng nước chữa lành bản thân và người xung quanh.']
+        unlock-level: 8
+        cooldown: 30
+        energy-cost: 35
+        trigger: COMMAND
+        params: {amount: 7.0, radius: 5.0, cleanse: [POISON, WITHER, WEAKNESS]}
+        effects:
+          sound: {key: entity.dolphin.play, volume: 1.0, pitch: 1.2}
+          particle: {type: HEART, count: 8, spread: 0.6, speed: 0}
+          animation: {type: SPIRAL, particle: BUBBLE_POP, radius: 1.2, duration: 22, height: 2.2}
+
+  snake:
+    display-name: '&a&lSnake'
+    icon: SLIME_BALL
+    gui-slot: 24
+    description:
+      - '&7Sát thủ âm thầm với nọc độc chết người,'
+      - '&7đuôi rắn uốn lượn sau lưng.'
+    stats: {health: 18.0, speed: 1.08, strength: 1.05, jump: 0.0, knockback-resistance: 0.0, critical-chance: 0.08}
+    growth: {health: 0.2, speed: 0.0006, strength: 0.005}
+    strengths:
+      - 'Tốc độ di chuyển +8%, tỉ lệ chí mạng cao'
+      - 'Đòn đánh có 35% cơ hội gây Poison'
+      - 'Miễn nhiễm Poison'
+      - 'Skill Shed Skin: tàng hình + tăng tốc'
+    weaknesses:
+      - 'Máu thấp hơn Human (-1 tim)'
+      - 'Nhận thêm 25% sát thương từ Fire (tộc Dragon)'
+    passives:
+      on-hit:
+        - {type: POISON, duration: 80, amplifier: 0, chance: 0.35}
+      immune-effects: [POISON]
+      damage-tags: [VENOM]
+      weak-to: {FIRE: 1.25}
+    cosmetic:
+      parts:
+        tail:
+          type: TAIL
+          item: LIME_DYE
+          end-item: FERMENTED_SPIDER_EYE
+          segments: 8
+          spacing: 0.3
+          scale: 0.75
+          end-scale: 0.35
+          up: 0.55
+          back: 0.35
+          wiggle: 0.16
+          billboard: CENTER
+      particles:
+        venom: {type: ITEM_SLIME, count: 1, spread: 0.1, speed: 0, interval: 6, at: TAIL_END, moving-only: true}
+    skills:
+      venom-spit:
+        type: AOE_DAMAGE
+        name: '&aVenom Spit'
+        description: ['Phun nọc độc: sát thương Venom, gây Poison và làm chậm.']
+        unlock-level: 1
+        cooldown: 12
+        energy-cost: 30
+        trigger: RIGHT_CLICK
+        tags: [VENOM]
+        params:
+          radius: 4.0
+          damage: 4.0
+          knockback: 0.2
+          affect-players: true
+          affect-mobs: true
+          effects:
+            - {type: POISON, duration: 120, amplifier: 1}
+            - {type: SLOWNESS, duration: 60, amplifier: 0}
+        effects:
+          sound: {key: entity.cat.hiss, volume: 1.0, pitch: 0.8}
+          particle: {type: ITEM_SLIME, count: 40, spread: 1.0, speed: 0.05}
+          animation: {type: RING, particle: ITEM_SLIME, radius: 4.0, duration: 10}
+      shed-skin:
+        type: SELF_BUFF
+        name: '&2Shed Skin'
+        description: ['Lột da: tàng hình trong chốc lát và chạy nhanh.']
+        unlock-level: 1
+        cooldown: 45
+        energy-cost: 40
+        trigger: SHIFT_RIGHT_CLICK
+        params:
+          effects:
+            - {type: INVISIBILITY, duration: 100, amplifier: 0}
+            - {type: SPEED, duration: 100, amplifier: 1}
+        effects:
+          sound: {key: entity.slime.squish, volume: 1.0, pitch: 0.7}
+          particle: {type: ITEM_SLIME, count: 30, spread: 0.6, speed: 0.05}
+          animation: {type: SPIRAL, particle: ITEM_SLIME, radius: 1.0, duration: 18, height: 2.0}
+      coil-strike:
+        type: DASH
+        name: '&aCoil Strike'
+        description: ['Lao tới như rắn vồ mồi.']
+        unlock-level: 5
+        cooldown: 10
+        energy-cost: 20
+        trigger: COMMAND
+        params: {forward: 2.0, up: 0.2}
+        effects:
+          sound: {key: entity.cat.hiss, volume: 0.8, pitch: 1.4}
+          particle: {type: ITEM_SLIME, count: 20, spread: 0.4, speed: 0.05}
+          animation: {type: RING, particle: ITEM_SLIME, radius: 1.5, duration: 8}

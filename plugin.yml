@@ -1,0 +1,27 @@
+name: AstraXRace
+version: '1.0.0'
+main: me.astrax.race.AstraXRace
+api-version: '1.21'
+authors: [Astrax]
+description: Hệ thống chủng tộc (Race), kỹ năng, cấp độ và nâng cấp cho BoxMine RPG
+
+commands:
+  race:
+    description: Lệnh chính của AstraXRace
+    aliases: [chungtoc]
+    usage: /race help
+    permission: astraxrace.use
+
+permissions:
+  astraxrace.use:
+    description: Dùng các lệnh race cơ bản
+    default: true
+  astraxrace.bypass:
+    description: Bỏ qua cooldown/năng lượng skill và giới hạn đổi race
+    default: op
+  astraxrace.admin:
+    description: Quản trị AstraXRace
+    default: op
+    children:
+      astraxrace.use: true
+      astraxrace.bypass: true
