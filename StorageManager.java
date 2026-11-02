@@ -8,6 +8,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Collection;
 import java.util.UUID;
@@ -50,6 +51,13 @@ public final class StorageManager {
                 st.executeUpdate("CREATE TABLE IF NOT EXISTS race_players ("
                         + "uuid TEXT PRIMARY KEY, name TEXT, race TEXT, level INTEGER NOT NULL, exp INTEGER NOT NULL, "
                         + "points INTEGER NOT NULL, changes_used INTEGER NOT NULL, upgrades TEXT)");
+                for (String col : new String[]{"pity_epic", "pity_legend"}) {
+                    try {
+                        st.executeUpdate("ALTER TABLE race_players ADD COLUMN " + col + " INTEGER NOT NULL DEFAULT 0");
+                    } catch (SQLException ignored) {
+                        // cột đã tồn tại
+                    }
+                }
             }
         } else {
             yamlFile = new File(plugin.getDataFolder(), "players.yml");
@@ -62,7 +70,7 @@ public final class StorageManager {
         if (sqlite) {
             try (Connection c = DriverManager.getConnection(url);
                  PreparedStatement ps = c.prepareStatement(
-                         "SELECT race, level, exp, points, changes_used, upgrades FROM race_players WHERE uuid=?")) {
+                         "SELECT race, level, exp, points, changes_used, upgrades, pity_epic, pity_legend FROM race_players WHERE uuid=?")) {
                 ps.setString(1, uuid.toString());
                 try (ResultSet rs = ps.executeQuery()) {
                     if (!rs.next()) return null;
@@ -73,6 +81,8 @@ public final class StorageManager {
                     d.setPoints(rs.getInt("points"));
                     d.setChangesUsed(rs.getInt("changes_used"));
                     d.parseUpgrades(rs.getString("upgrades"));
+                    d.setPityEpic(rs.getInt("pity_epic"));
+                    d.setPityLegend(rs.getInt("pity_legend"));
                     d.setDirty(false);
                     return d;
                 }
@@ -88,6 +98,8 @@ public final class StorageManager {
             d.setPoints(s.getInt("points", 0));
             d.setChangesUsed(s.getInt("changes-used", 0));
             d.parseUpgrades(s.getString("upgrades", ""));
+            d.setPityEpic(s.getInt("pity-epic", 0));
+            d.setPityLegend(s.getInt("pity-legend", 0));
             d.setDirty(false);
             return d;
         }
@@ -107,8 +119,8 @@ public final class StorageManager {
             if (sqlite) {
                 try (Connection c = DriverManager.getConnection(url);
                      PreparedStatement ps = c.prepareStatement(
-                             "INSERT OR REPLACE INTO race_players (uuid, name, race, level, exp, points, changes_used, upgrades) "
-                                     + "VALUES (?,?,?,?,?,?,?,?)")) {
+                             "INSERT OR REPLACE INTO race_players (uuid, name, race, level, exp, points, changes_used, upgrades, pity_epic, pity_legend) "
+                                     + "VALUES (?,?,?,?,?,?,?,?,?,?)")) {
                     ps.setString(1, d.getUuid().toString());
                     ps.setString(2, d.getName());
                     ps.setString(3, d.getRace());
@@ -117,6 +129,8 @@ public final class StorageManager {
                     ps.setInt(6, d.getPoints());
                     ps.setInt(7, d.getChangesUsed());
                     ps.setString(8, d.serializeUpgrades());
+                    ps.setInt(9, d.getPityEpic());
+                    ps.setInt(10, d.getPityLegend());
                     ps.executeUpdate();
                 }
             } else {
@@ -129,6 +143,8 @@ public final class StorageManager {
                     yaml.set(p + "points", d.getPoints());
                     yaml.set(p + "changes-used", d.getChangesUsed());
                     yaml.set(p + "upgrades", d.serializeUpgrades());
+                    yaml.set(p + "pity-epic", d.getPityEpic());
+                    yaml.set(p + "pity-legend", d.getPityLegend());
                     yaml.save(yamlFile);
                 }
             }

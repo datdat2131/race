@@ -16,6 +16,8 @@ public final class AstraXRace extends JavaPlugin {
     private RaceManager races;
     private GUIManager guis;
     private CosmeticManager cosmetics;
+    private CooldownManager cooldowns;
+    private RollManager rolls;
     private boolean ready;
 
     @Override
@@ -37,6 +39,8 @@ public final class AstraXRace extends JavaPlugin {
         races.loadRaces();
         guis = new GUIManager(this);
         cosmetics = new CosmeticManager(this);
+        cooldowns = new CooldownManager(this);
+        rolls = new RollManager(this);
 
         CommandManager commands = new CommandManager(this);
         PluginCommand cmd = getCommand("race");
@@ -45,12 +49,17 @@ public final class AstraXRace extends JavaPlugin {
             cmd.setTabCompleter(commands);
         }
         getServer().getPluginManager().registerEvents(new RaceListener(this), this);
+        if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            new RacePlaceholders(this).register();
+            getLogger().info("Đã đăng ký PlaceholderAPI (astraxrace).");
+        }
 
         // Người chơi đang online (khi /reload hoặc plugin được bật muộn)
         for (Player p : Bukkit.getOnlinePlayers()) races.attach(p);
         cosmetics.start();
 
         Bukkit.getScheduler().runTaskTimer(this, skills::tick, 20L, 20L);
+        Bukkit.getScheduler().runTaskTimer(this, cooldowns::tick, 10L, 2L);
         long autosave = Math.max(1, configs.config().getLong("storage.autosave-minutes", 5)) * 1200L;
         Bukkit.getScheduler().runTaskTimer(this, races::saveDirty, autosave, autosave);
 
@@ -65,6 +74,8 @@ public final class AstraXRace extends JavaPlugin {
             return;
         }
         cosmetics.shutdown();
+        rolls.shutdown();
+        cooldowns.shutdown();
         for (Player p : Bukkit.getOnlinePlayers()) races.clearAttributes(p);
         storage.shutdown(races.snapshots());
     }
@@ -87,4 +98,6 @@ public final class AstraXRace extends JavaPlugin {
     public RaceManager races() { return races; }
     public GUIManager guis() { return guis; }
     public CosmeticManager cosmetics() { return cosmetics; }
+    public CooldownManager cooldowns() { return cooldowns; }
+    public RollManager rolls() { return rolls; }
 }

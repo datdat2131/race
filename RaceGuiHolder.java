@@ -9,7 +9,7 @@ import java.util.Map;
 /** Holder để nhận diện GUI của plugin và ánh xạ slot -> hành động. */
 public final class RaceGuiHolder implements InventoryHolder {
 
-    public enum Type { MAIN, DETAIL, UPGRADE }
+    public enum Type { MAIN, DETAIL, UPGRADE, ROLL }
 
     private final Type type;
     private final String raceId;

@@ -98,6 +98,10 @@ public final class ConfigManager {
         for (String line : messages.getStringList(key)) to.sendMessage(color(replace(line, kv)));
     }
 
+    public void actionBar(org.bukkit.entity.Player p, String key, String... kv) {
+        p.sendActionBar(color(raw(key, kv)));
+    }
+
     public static String num(double d) {
         if (d == Math.rint(d)) return String.valueOf((long) d);
         return String.format(Locale.US, "%.1f", d);

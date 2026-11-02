@@ -229,3 +229,52 @@ gui:
       slot: 22
       material: BARRIER
       name: '&cĐóng'
+
+# ---------------- Vé roll tộc ----------------
+# Dùng vé (chuột phải hoặc /race roll) → quay ngẫu nhiên một chủng tộc theo độ hiếm.
+# Độ hiếm của từng tộc khai báo trong races.yml (rarity). Thứ tự khai báo = thứ hạng (thấp → cao).
+roll:
+  enabled: true
+  title: '&8Roll Chủng Tộc'
+  animation-steps: 26           # số bước quay (10-60)
+  close-delay-ticks: 60         # tự đóng GUI sau khi ra kết quả
+  confirm-when-has-race: true   # đã có tộc: phải dùng vé lần 2 trong confirm-seconds để xác nhận (tránh lỡ tay)
+  confirm-seconds: 8
+  exclude-current: true         # không roll trúng đúng tộc đang có
+  progress-reset: true          # (dùng race.reset-progress-on-change) đổi tộc bằng vé có reset level/nâng cấp
+  pity:                         # bảo hiểm: sau N lượt không ra thì lượt kế tiếp chắc chắn ra (0 = tắt)
+    epic: 25                    # chắc chắn ra EPIC trở lên
+    legendary: 80               # chắc chắn ra LEGENDARY
+  rarities:                     # name, color (mã &), weight (tỉ lệ), sound (âm thanh lộ kết quả), broadcast (thông báo toàn server)
+                                # pane (màu viền GUI), rgb (màu hạt), fireworks (số đợt pháo hoa), lightning (sét hiệu ứng)
+    COMMON:    {name: 'Thường',      color: '&f', weight: 50, sound: entity.experience_orb.pickup, broadcast: false, pane: WHITE_STAINED_GLASS_PANE,  rgb: '#FFFFFF', fireworks: 0, lightning: false}
+    RARE:      {name: 'Hiếm',        color: '&9', weight: 30, sound: entity.player.levelup,         broadcast: false, pane: LIGHT_BLUE_STAINED_GLASS_PANE, rgb: '#4DA6FF', fireworks: 1, lightning: false}
+    EPIC:      {name: 'Sử thi',      color: '&5', weight: 15, sound: ui.toast.challenge_complete,   broadcast: false, pane: PURPLE_STAINED_GLASS_PANE, rgb: '#B04DFF', fireworks: 3, lightning: false}
+    LEGENDARY: {name: 'Huyền thoại', color: '&6', weight: 5,  sound: ui.toast.challenge_complete,   broadcast: true,  pane: ORANGE_STAINED_GLASS_PANE, rgb: '#FFB300', fireworks: 6, lightning: true}
+  effects:                      # hiệu ứng lúc quay (vòng ma pháp, hạt hút vào, nhịp tim, nổ theo độ hiếm)
+    enabled: true
+    density: 1.0                # 0.2 - 3.0, giảm nếu server yếu
+    suspense-ticks: 14          # khoảng dừng hồi hộp (nhịp tim) trước khi lộ kết quả
+
+ticket:
+  material: PAPER
+  name: '&6&lVé Roll Tộc'
+  lore:
+    - '&7Chuột phải để quay ngẫu nhiên một chủng tộc.'
+    - ' '
+    - '&8Thường &f50% &8• Hiếm &930% &8• Sử thi &515% &8• Huyền thoại &65%'
+    - '&8Bảo hiểm: Sử thi sau 25 lượt, Huyền thoại sau 80 lượt'
+    - '&8Kiểm tra bảo hiểm: /race pity'
+  glow: true
+
+# ---------------- Hồi chiêu ----------------
+cooldown:
+  hud: true                     # khi cầm Gậy Chủng Tộc: ActionBar hiện trạng thái từng skill (✔ sẵn sàng / số giây hồi)
+  bossbar: true                 # BossBar tiến độ hồi chiêu của skill vừa dùng
+  bar-color: PURPLE             # PINK | BLUE | RED | GREEN | YELLOW | PURPLE | WHITE
+  bar-overlay: PROGRESS         # PROGRESS | NOTCHED_6 | NOTCHED_10 | NOTCHED_12 | NOTCHED_20
+  ready-notify: true            # thông báo + âm thanh khi skill hồi xong
+  ready-sound: entity.experience_orb.pickup
+
+placeholders:
+  no-race: 'Chưa có'

@@ -4,6 +4,7 @@ main: me.astrax.race.AstraXRace
 api-version: '1.21'
 authors: [Astrax]
 description: Hệ thống chủng tộc (Race), kỹ năng, cấp độ và nâng cấp cho BoxMine RPG
+softdepend: [PlaceholderAPI]
 
 commands:
   race:

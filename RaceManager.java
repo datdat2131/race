@@ -145,6 +145,8 @@ public final class RaceManager {
     /** Gỡ người chơi khi thoát: gỡ modifier, lưu dữ liệu, dọn cache. */
     public void detach(Player p) {
         plugin.cosmetics().remove(p);
+        plugin.rolls().onQuit(p);
+        plugin.cooldowns().onQuit(p);
         clearAttributes(p);
         PlayerRaceData d = cache.remove(p.getUniqueId());
         if (d != null && d.isPersistable()) plugin.storage().saveAsync(d.copy());

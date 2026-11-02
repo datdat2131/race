@@ -15,7 +15,7 @@ import java.util.Locale;
 /** Xử lý lệnh /race và tab completion. */
 public final class CommandManager implements CommandExecutor, TabCompleter {
 
-    private static final List<String> PLAYER_SUBS = List.of("choose", "info", "skill", "upgrade", "item", "level", "help");
+    private static final List<String> PLAYER_SUBS = List.of("choose", "info", "skill", "upgrade", "item", "level", "roll", "pity", "ticket", "help");
     private static final List<String> ADMIN_SUBS = List.of("reload", "set", "reset", "giveexp");
 
     private final AstraXRace plugin;
@@ -50,6 +50,9 @@ public final class CommandManager implements CommandExecutor, TabCompleter {
             case "skill" -> skill(sender, args);
             case "upgrade" -> upgrade(sender);
             case "item" -> item(sender);
+            case "roll" -> roll(sender);
+            case "pity" -> pity(sender);
+            case "ticket" -> ticket(sender, args);
             case "level" -> level(sender, args);
             case "reload" -> reload(sender);
             case "set" -> set(sender, args);
@@ -204,6 +207,53 @@ public final class CommandManager implements CommandExecutor, TabCompleter {
                 "points", String.valueOf(d.getPoints()));
     }
 
+    // ---------------- Vé roll tộc ----------------
+    private void roll(CommandSender sender) {
+        Player p = player(sender);
+        if (p != null) plugin.rolls().use(p);
+    }
+
+    private void pity(CommandSender sender) {
+        Player p = player(sender);
+        if (p == null) return;
+        PlayerRaceData d = plugin.races().data(p);
+        if (d == null) {
+            cm().send(p, "data-not-loaded");
+            return;
+        }
+        var c = plugin.configs().config();
+        cm().sendList(p, "pity-info",
+                "tickets", String.valueOf(plugin.rolls().ticketCount(p)),
+                "epic", String.valueOf(d.getPityEpic()), "epic_max", String.valueOf(c.getInt("roll.pity.epic", 0)),
+                "legend", String.valueOf(d.getPityLegend()), "legend_max", String.valueOf(c.getInt("roll.pity.legendary", 0)));
+    }
+
+    private void ticket(CommandSender sender, String[] args) {
+        if (!admin(sender)) return;
+        if (args.length < 3 || !args[1].equalsIgnoreCase("give")) {
+            cm().send(sender, "usage", "usage", "/race ticket give <player> [số lượng]");
+            return;
+        }
+        Player t = online(sender, args[2]);
+        if (t == null) return;
+        int amount = 1;
+        if (args.length >= 4) {
+            try {
+                amount = Integer.parseInt(args[3]);
+            } catch (NumberFormatException e) {
+                cm().send(sender, "invalid-number");
+                return;
+            }
+        }
+        if (amount <= 0 || amount > 640) {
+            cm().send(sender, "invalid-number");
+            return;
+        }
+        plugin.rolls().giveTickets(t, amount);
+        cm().send(sender, "ticket-given", "player", t.getName(), "amount", String.valueOf(amount));
+        cm().send(t, "ticket-received", "amount", String.valueOf(amount));
+    }
+
     // ---------------- Lệnh admin ----------------
     private void reload(CommandSender sender) {
         if (!admin(sender)) return;
@@ -282,6 +332,13 @@ public final class CommandManager implements CommandExecutor, TabCompleter {
             return filter(subs, args[0]);
         }
         String sub = args[0].toLowerCase(Locale.ROOT);
+        if (sub.equals("ticket")) {
+            if (!isAdmin) return List.of();
+            if (args.length == 2) return filter(List.of("give"), args[1]);
+            if (args.length == 3) return filter(playerNames(), args[2]);
+            if (args.length == 4) return filter(List.of("1", "5", "10", "64"), args[3]);
+            return List.of();
+        }
         if (args.length == 2) {
             switch (sub) {
                 case "choose" -> {

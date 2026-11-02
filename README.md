@@ -11,7 +11,10 @@ Plugin **Paper 1.21.x** · **Java 21** · Maven · layout phẳng (mọi file �
 - **Cấp độ**: Race Level, Race EXP, Skill Points. Lên cấp → tăng chỉ số, mở skill mới, nhận điểm nâng cấp.
 - **GUI `/race upgrade`**: Strength, Defense, Speed, Health, Critical, Skill Power (giới hạn cấp, giá, giá trị mỗi cấp cấu hình được).
 - Lưu **SQLite** (mặc định, `players.db`) hoặc **YAML** (`players.yml`); ghi bất đồng bộ, reconnect giữ nguyên race/level, `/race reload` không mất dữ liệu.
-- Không cần dependency ngoài (không cần Vault/PlaceholderAPI).
+- **Vé Roll Tộc**: quay ngẫu nhiên chủng tộc theo độ hiếm (Thường → Huyền thoại), có hoạt ảnh vòng quay, bảo hiểm (pity) và xác nhận khi đã có tộc.
+- **Hồi chiêu rõ ràng**: mọi skill đều có cooldown; ActionBar có thanh tiến độ, BossBar tiến độ, HUD trạng thái từng skill khi cầm Gậy Chủng Tộc, thông báo khi hồi xong.
+- **Không có skill lướt đi**: các tộc chỉ có skill sát thương diện rộng / buff / hồi máu / chống rơi.
+- Hỗ trợ **PlaceholderAPI** (tùy chọn). Không bắt buộc dependency nào ngoài Paper.
 
 ## Cấu trúc project (flat)
 
@@ -27,11 +30,14 @@ AstraXRace-flat/
 ├─ RaceManager.java        # race, level, nâng cấp, attribute, công thức sát thương
 ├─ SkillManager.java       # tạo skill, cooldown, năng lượng, vật phẩm skill
 ├─ Skill.java              # lớp cơ sở
-├─ AoeDamageSkill.java  SelfBuffSkill.java  HealSkill.java  DashSkill.java  NoFallSkill.java
+├─ AoeDamageSkill.java  SelfBuffSkill.java  HealSkill.java  NoFallSkill.java
 ├─ SkillEffects.java       # particle / sound / animation
 ├─ EffectSpec.java         # hiệu ứng potion cấu hình bằng YAML
 ├─ GUIManager.java  RaceGuiHolder.java
 ├─ CosmeticDef.java  CosmeticManager.java   # cánh/vật phẩm đi theo (ItemDisplay)
+├─ RollManager.java        # Vé Roll Tộc: độ hiếm, pity, hoạt ảnh quay
+├─ CooldownManager.java    # hồi chiêu: ActionBar/BossBar/thông báo sẵn sàng
+├─ RacePlaceholders.java   # PlaceholderAPI (%astraxrace_...%)
 ├─ CommandManager.java     # lệnh + tab completion
 └─ RaceListener.java       # sự kiện
 ```
@@ -70,6 +76,9 @@ File jar: `target/AstraXRace-1.0.0.jar`. Dependency duy nhất là `paper-api` (
 | `/race set <người> <race>` | Đặt race (không tính lượt đổi) | `astraxrace.admin` |
 | `/race reset <người>` | Xóa race và tiến trình | `astraxrace.admin` |
 | `/race giveexp <người> <số>` | Cộng Race EXP | `astraxrace.admin` |
+| `/race roll` | Dùng Vé Roll Tộc (hoặc chuột phải vé) | `astraxrace.use` |
+| `/race pity` | Xem số vé và bộ đếm bảo hiểm | `astraxrace.use` |
+| `/race ticket give <người> [số]` | Phát Vé Roll Tộc | `astraxrace.admin` |
 
 Quyền: `astraxrace.use` (mặc định true), `astraxrace.admin` (op), `astraxrace.bypass` (op – bỏ cooldown/năng lượng skill và giới hạn đổi race). Alias lệnh: `/chungtoc`.
 
@@ -100,9 +109,34 @@ races:
 | `damage-tags` / `weak-to` | thẻ sát thương gây ra (vd `HOLY`) / hệ số sát thương nhận từ thẻ đó |
 | `permanent-effects` | hiệu ứng potion thường trực |
 
-**Loại skill:** `AOE_DAMAGE`, `SELF_BUFF`, `HEAL`, `DASH`, `NO_FALL` – tham số trong `params`, hiệu ứng hình ảnh trong `effects` (`sound`, `particle`, `animation`). Trigger: `RIGHT_CLICK`, `SHIFT_RIGHT_CLICK`, `COMMAND`.
+**Loại skill:** `AOE_DAMAGE`, `SELF_BUFF`, `HEAL`, `NO_FALL` – tham số trong `params`, hiệu ứng hình ảnh trong `effects` (`sound`, `particle`, `animation`). Trigger: `RIGHT_CLICK`, `SHIFT_RIGHT_CLICK`, `COMMAND`.
 
 Tên particle theo enum `Particle` của Bukkit (FLAME, HEART, END_ROD…); âm thanh dùng khoá Minecraft (`entity.blaze.shoot`).
+
+## Vé Roll Tộc
+
+- Phát vé: `/race ticket give <người> [số lượng]`. Người chơi **chuột phải vé** (hoặc `/race roll`) để quay.
+- Mỗi tộc có `rarity` trong `races.yml`; tỉ lệ từng độ hiếm nằm ở `roll.rarities` trong `config.yml` (mặc định Thường 50% · Hiếm 30% · Sử thi 15% · Huyền thoại 5%). Khi quay: chọn độ hiếm theo trọng số rồi chọn ngẫu nhiên một tộc cùng độ hiếm.
+- **Bảo hiểm (pity)**: sau `roll.pity.epic` lượt không ra Sử thi trở lên thì lượt kế tiếp chắc chắn ra Sử thi+; sau `roll.pity.legendary` lượt không ra Huyền thoại thì chắc chắn ra Huyền thoại. Bộ đếm lưu theo từng người chơi (SQLite/YAML).
+- Đã có tộc: vé thay thế tộc hiện tại nên cần **dùng vé lần 2 trong `confirm-seconds` giây** để xác nhận (`roll.confirm-when-has-race`). Roll **không tính vào số lần đổi tộc**, nhưng vẫn reset level/nâng cấp theo `race.reset-progress-on-change`.
+- Kết quả được quyết định và áp dụng ngay khi dùng vé (không thể thoát game để né); toàn bộ hoạt ảnh chỉ để trình diễn. Tộc Huyền thoại được thông báo toàn server.
+- **Hiệu ứng lúc quay:**
+  - *Đang quay:* GUI vòng quay chạy chậm dần, viền đổi màu cầu vồng, ActionBar chạy tên tộc, âm thanh nốt nhạc tăng dần. Quanh người chơi hiện **vòng ma pháp** (2 vòng quay ngược chiều + ngôi sao 6 cánh) xoay nhanh dần và co lại, xoắn ốc bay lên, hạt sáng bay hút vào người, tiếng năng lượng dâng cao.
+  - *Hồi hộp:* vòng quay dừng, **nhịp tim dồn dập** và vòng ma pháp đập theo nhịp trước khi lộ kết quả.
+  - *Lộ kết quả:* viền GUI đổi sang màu độ hiếm, tiêu đề + âm thanh riêng; **cầu nổ, sóng xung kích, cột sáng** theo màu độ hiếm; pháo hoa bằng particle (an toàn, không gây sát thương); độ hiếm cao nhất có thêm **sét hiệu ứng** (không gây sát thương/cháy).
+  - Chỉnh màu viền, màu hạt, số đợt pháo hoa, sét ở `roll.rarities`; bật/tắt, mật độ, thời gian hồi hộp ở `roll.effects` (giảm `density` nếu server yếu).
+- Tùy chỉnh vé ở mục `ticket` (vật phẩm, tên, lore).
+
+## Hồi chiêu & HUD
+
+- Mọi skill đều có `cooldown` riêng (giây) và `energy-cost`; quyền `astraxrace.bypass` bỏ qua cả hai.
+- Thử dùng khi đang hồi: ActionBar `⏳ Tên skill 8.2s [████░░░░]` + âm thanh nhắc.
+- **BossBar** tiến độ hồi chiêu của skill vừa dùng; **HUD** trên ActionBar khi cầm Gậy Chủng Tộc (✔ sẵn sàng / số giây hồi / khóa theo cấp) kèm năng lượng; thông báo + âm thanh khi hồi xong. Chỉnh trong mục `cooldown` của `config.yml` và các khóa `hud-*` trong `messages.yml`.
+- Cooldown được giữ khi thoát/vào lại server.
+
+## PlaceholderAPI (tùy chọn)
+
+`%astraxrace_race%` · `_race_id` · `_rarity` · `_level` · `_exp` · `_required` · `_points` · `_tickets` · `_changes_left` · `_pity_epic` · `_pity_legend`
 
 ## Cosmetic (cánh, vật phẩm đi theo, đuôi)
 
@@ -128,7 +162,7 @@ cosmetic:
 | `type` | tất cả | `FIXED`, `FOLLOWER`, `TAIL` |
 | `item`, `item-model`, `custom-model-data` | tất cả | Vật phẩm hiển thị; 2 khóa sau dùng cho resource pack (xem dưới) |
 | `scale`, `end-scale` | tất cả | Kích thước (`end-scale` = đốt cuối của TAIL) |
-| `side`, `up`, `back` | tất cả | Vị trí tương đối |
+| `side`, `up`, `back` | tất cả | Vị trí tương đối. `back` = khoảng cách lùi ra sau lưng (mặc định đã đặt 0.75–0.9 để vật phẩm cách xa người chơi, không chạm vào lưng) |
 | `tilt`, `spread`, `pitch`, `pivot`, `mirror`, `flap` | FIXED | Dáng cánh/vật phẩm gắn lưng |
 | `follow-speed`, `bob: {amplitude, speed}` | FOLLOWER | Độ "trễ" khi bay theo và nhấp nhô |
 | `segments`, `spacing`, `wiggle`, `end-item` | TAIL | Số đốt, khoảng cách đốt, độ uốn lượn, vật phẩm đốt cuối |
@@ -140,6 +174,39 @@ Particle `at`: `BACK` (sau lưng) hoặc `TAIL_END` (đầu mút đuôi); `movin
 Bật/tắt toàn cục và chỉnh hiệu năng ở mục `cosmetic` trong `config.yml` (`enabled`, `update-ticks`, `view-range`…).
 
 **Về hình dạng cánh:** mặc định cosmetic dùng icon vật phẩm 2D của Minecraft (ví dụ Elytra, Feather), nên cánh là hình phẳng được vỗ bằng animation. Muốn cánh 3D "thật", dùng resource pack và gán `item-model: 'tên_pack:ten_model'` (1.21.2+) hoặc `custom-model-data: <số>` cho part tương ứng.
+
+## Skill: tham số & hiệu ứng nâng cao
+
+**`AOE_DAMAGE`**: `radius`, `damage` (**mỗi đợt**), `waves` (số đợt), `wave-interval` (tick giữa các đợt), `follow` (đợt sau bám theo người dùng), `fire-ticks`, `knockback`, `lift` (hất lên), `pull` (kéo vào tâm thay vì đẩy ra), `lightning` (hiệu ứng sét tại mục tiêu, không gây sát thương sét), `effects`.
+
+**`HEAL`**: `amount`, `radius`, `cleanse`, `effects` (buff áp lên mọi người được hồi). **`NO_FALL`**: `duration-ticks`, `slow-falling`, `effects`. **`SELF_BUFF`**: `effects`, `heal`.
+
+**Hiệu ứng hình ảnh (`effects`)** – xếp nhiều lớp chồng lên nhau:
+
+```yaml
+effects:
+  sounds:                                   # nhiều âm thanh, có thể trễ (delay, tick)
+    cast:  {key: entity.blaze.shoot, volume: 1.0, pitch: 0.7}
+    boom:  {key: entity.generic.explode, volume: 0.8, pitch: 1.2, delay: 4}
+  particle: {type: FLAME, count: 80, spread: 1.6, speed: 0.1}     # nổ nhỏ lúc tung skill
+  animations:                               # nhiều lớp animation chạy song song
+    wave:   {type: SHOCKWAVE, particle: FLAME, radius: 7.5, duration: 14, count: 40}
+    vortex: {type: VORTEX, particle: SOUL_FIRE_FLAME, radius: 3.0, height: 3.2, duration: 18, delay: 4}
+  impact:  {particle: {type: FLAME, count: 14, spread: 0.4, speed: 0.06}, sound: {key: entity.blaze.hurt}}
+```
+
+| Loại animation | Hình dạng |
+|---|---|
+| `RING` | vòng tròn mở rộng dưới chân |
+| `SHOCKWAVE` | 2 vòng sóng xung kích mở rộng nhanh |
+| `SPIRAL` | xoắn ốc bay lên quanh người |
+| `VORTEX` | lốc xoáy vừa nở rộng vừa bay lên |
+| `PILLAR` | cột sáng dâng lên |
+| `BURST` | cầu nổ mở rộng |
+| `DOME` | mái vòm nửa cầu mở rộng |
+| `TRAIL` | vệt hạt bám theo người dùng |
+
+Mỗi lớp có: `particle`, `radius`, `height`, `duration` (tick), `count` (số điểm), `delay` (tick trước khi bắt đầu).
 
 ## Khắc chế giữa các tộc mới
 

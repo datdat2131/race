@@ -209,6 +209,11 @@ public final class RaceListener implements Listener {
 
         Player p = e.getPlayer();
         ItemStack item = e.getItem();
+        if (plugin.rolls().isTicket(item)) {
+            e.setCancelled(true);
+            plugin.rolls().use(p);
+            return;
+        }
         boolean tagged = skills().isSkillItem(item);
         boolean requireItem = plugin.configs().config().getBoolean("skill-item.require-item", true);
         if (requireItem && !tagged) return;

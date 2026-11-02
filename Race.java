@@ -23,6 +23,7 @@ public final class Race {
     private final String displayName;
     private final Material icon;
     private final int guiSlot;
+    private final String rarity;
     private final List<String> description;
     private final List<String> strengths;
     private final List<String> weaknesses;
@@ -51,6 +52,7 @@ public final class Race {
         Material m = Material.matchMaterial(s.getString("icon", "PLAYER_HEAD"));
         this.icon = m != null ? m : Material.PLAYER_HEAD;
         this.guiSlot = s.getInt("gui-slot", -1);
+        this.rarity = s.getString("rarity", "COMMON").toUpperCase(Locale.ROOT);
         this.description = s.getStringList("description");
         this.strengths = s.getStringList("strengths");
         this.weaknesses = s.getStringList("weaknesses");
@@ -114,6 +116,7 @@ public final class Race {
     public String getDisplayName() { return displayName; }
     public Material getIcon() { return icon; }
     public int getGuiSlot() { return guiSlot; }
+    public String getRarity() { return rarity; }
     public List<String> getDescription() { return description; }
     public List<String> getStrengths() { return strengths; }
     public List<String> getWeaknesses() { return weaknesses; }

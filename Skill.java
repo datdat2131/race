@@ -1,7 +1,11 @@
 package me.astrax.race;
 
+import org.bukkit.GameMode;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.MemoryConfiguration;
+import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.Enemy;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
 import java.util.HashSet;
@@ -45,6 +49,16 @@ public abstract class Skill {
      * @return false nếu skill không thể dùng (không tốn cooldown/năng lượng)
      */
     public abstract boolean execute(SkillManager sm, Player caster, double power);
+
+    /** Có được phép gây sát thương lên mục tiêu này không (PvP, gamemode, quái hostile). */
+    protected boolean canHit(Player caster, LivingEntity target, boolean players, boolean mobs) {
+        if (target.equals(caster) || target instanceof ArmorStand) return false;
+        if (target instanceof Player tp) {
+            if (!players || !caster.getWorld().getPVP()) return false;
+            return tp.getGameMode() != GameMode.CREATIVE && tp.getGameMode() != GameMode.SPECTATOR;
+        }
+        return mobs && target instanceof Enemy;
+    }
 
     public String getId() { return id; }
     public String getName() { return name; }

@@ -15,6 +15,8 @@ public final class PlayerRaceData {
     private long exp;
     private int points;
     private int changesUsed;
+    private int pityEpic;
+    private int pityLegend;
     private final Map<String, Integer> upgrades = new HashMap<>();
 
     private boolean dirty;
@@ -43,6 +45,11 @@ public final class PlayerRaceData {
 
     public int getChangesUsed() { return changesUsed; }
     public void setChangesUsed(int changesUsed) { this.changesUsed = changesUsed; dirty = true; }
+
+    public int getPityEpic() { return pityEpic; }
+    public void setPityEpic(int v) { this.pityEpic = v; dirty = true; }
+    public int getPityLegend() { return pityLegend; }
+    public void setPityLegend(int v) { this.pityLegend = v; dirty = true; }
 
     public int getUpgrade(String attr) { return upgrades.getOrDefault(attr, 0); }
     public void setUpgrade(String attr, int value) { upgrades.put(attr, value); dirty = true; }
@@ -83,6 +90,8 @@ public final class PlayerRaceData {
         c.exp = exp;
         c.points = points;
         c.changesUsed = changesUsed;
+        c.pityEpic = pityEpic;
+        c.pityLegend = pityLegend;
         c.upgrades.putAll(upgrades);
         return c;
     }

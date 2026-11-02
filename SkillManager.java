@@ -11,7 +11,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -19,7 +20,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
-/** Tạo skill, kiểm tra cooldown/năng lượng, kích hoạt và quản lý trạng thái tạm (không lưu DB). */
+/** Tạo skill, kiểm tra cooldown/năng lượng, kích hoạt, HUD hồi chiêu và quản lý trạng thái tạm (không lưu DB). */
 public final class SkillManager {
 
     public static final String TRIGGER_RIGHT = "RIGHT_CLICK";
@@ -27,7 +28,6 @@ public final class SkillManager {
 
     private final AstraXRace plugin;
     private final NamespacedKey itemKey;
-    private final Map<UUID, Map<String, Long>> cooldowns = new ConcurrentHashMap<>();
     private final Map<UUID, Double> energy = new ConcurrentHashMap<>();
     private final Map<UUID, Long> noFallUntil = new ConcurrentHashMap<>();
     private boolean skillDamage;
@@ -35,6 +35,10 @@ public final class SkillManager {
     public SkillManager(AstraXRace plugin) {
         this.plugin = plugin;
         this.itemKey = new NamespacedKey(plugin, "skill_item");
+    }
+
+    public AstraXRace plugin() {
+        return plugin;
     }
 
     // ---------------- Tạo skill ----------------
@@ -45,7 +49,6 @@ public final class SkillManager {
             case "AOE_DAMAGE" -> new AoeDamageSkill(id, sec, log);
             case "SELF_BUFF" -> new SelfBuffSkill(id, sec, log);
             case "HEAL" -> new HealSkill(id, sec, log);
-            case "DASH" -> new DashSkill(id, sec, log);
             case "NO_FALL" -> new NoFallSkill(id, sec, log);
             default -> {
                 log.warning("Loại skill không hợp lệ '" + type + "' (skill " + id + ")");
@@ -70,6 +73,10 @@ public final class SkillManager {
         return 1.0 + plugin.races().upgradeBonus(d, "skill_power") + perLevel * (d.getLevel() - 1);
     }
 
+    private static String key(Race r, Skill s) {
+        return r.getId() + ":" + s.getId();
+    }
+
     /** Dùng skill, gửi thông báo nếu thất bại. Trả về true nếu dùng thành công. */
     public boolean castAndNotify(Player p, Skill skill) {
         ConfigManager cm = plugin.configs();
@@ -84,12 +91,9 @@ public final class SkillManager {
             return false;
         }
         boolean bypass = p.hasPermission("astraxrace.bypass");
-        long now = System.currentTimeMillis();
-        String key = r.getId() + ":" + skill.getId();
-        Map<String, Long> cd = cooldowns.computeIfAbsent(p.getUniqueId(), k -> new HashMap<>());
-        Long until = cd.get(key);
-        if (!bypass && until != null && until > now) {
-            cm.send(p, "skill-cooldown", "seconds", String.valueOf((until - now + 999) / 1000));
+        String key = key(r, skill);
+        if (!bypass && plugin.cooldowns().remaining(p.getUniqueId(), key) > 0) {
+            plugin.cooldowns().showCooling(p, key, skill.getName());
             return false;
         }
         boolean useEnergy = energyEnabled() && !bypass && skill.getEnergyCost() > 0;
@@ -101,18 +105,15 @@ public final class SkillManager {
         if (!skill.execute(this, p, power(d))) return false;
 
         if (useEnergy) energy.put(p.getUniqueId(), getEnergy(p) - skill.getEnergyCost());
-        cd.put(key, now + (long) (skill.getCooldown() * 1000));
+        if (!bypass) plugin.cooldowns().start(p, key, skill.getName(), skill.getCooldown());
         skill.getEffects().play(plugin, p);
         p.sendActionBar(ConfigManager.color(cm.raw("skill-used", "skill", skill.getName())));
         return true;
     }
 
+    /** Số giây còn lại (làm tròn lên) của một skill; 0 nếu sẵn sàng. */
     public long cooldownRemaining(UUID id, Race r, Skill s) {
-        Map<String, Long> cd = cooldowns.get(id);
-        if (cd == null) return 0;
-        Long until = cd.get(r.getId() + ":" + s.getId());
-        if (until == null) return 0;
-        return Math.max(0, (until - System.currentTimeMillis() + 999) / 1000);
+        return (long) Math.ceil(plugin.cooldowns().remaining(id, key(r, s)));
     }
 
     // ---------------- Sát thương skill ----------------
@@ -169,24 +170,29 @@ public final class SkillManager {
         energy.put(p.getUniqueId(), d == null ? 100.0 : maxEnergy(d));
     }
 
-    /** Chạy mỗi giây: hồi năng lượng, hiệu ứng thường trực, hiển thị action bar. */
+    /** Chạy mỗi giây: hồi năng lượng, hiệu ứng thường trực, HUD hồi chiêu trên ActionBar. */
     public void tick() {
         ConfigurationSection cfg = plugin.configs().config();
         boolean enabled = energyEnabled();
         double regen = cfg.getDouble("energy.regen-per-second", 3.0);
         boolean showBar = cfg.getBoolean("energy.show-actionbar-when-holding-item", true);
+        boolean hud = cfg.getBoolean("cooldown.hud", true);
         for (Player p : Bukkit.getOnlinePlayers()) {
             PlayerRaceData d = plugin.races().data(p);
             Race r = plugin.races().raceOf(d);
             if (d == null || r == null) continue;
+            double max = maxEnergy(d);
+            double cur = energy.getOrDefault(p.getUniqueId(), max);
             if (enabled) {
-                double max = maxEnergy(d);
-                double cur = Math.min(max, energy.getOrDefault(p.getUniqueId(), max) + regen);
+                cur = Math.min(max, cur + regen);
                 energy.put(p.getUniqueId(), cur);
-                if (showBar && isSkillItem(p.getInventory().getItemInMainHand())) {
-                    p.sendActionBar(ConfigManager.color(plugin.configs().raw("energy-bar",
-                            "energy", ConfigManager.num(Math.floor(cur)), "max", ConfigManager.num(max))));
-                }
+            }
+            boolean holding = isSkillItem(p.getInventory().getItemInMainHand());
+            if (holding && hud) {
+                p.sendActionBar(ConfigManager.color(buildHud(p, d, r, enabled, cur, max)));
+            } else if (holding && enabled && showBar) {
+                p.sendActionBar(ConfigManager.color(plugin.configs().raw("energy-bar",
+                        "energy", ConfigManager.num(Math.floor(cur)), "max", ConfigManager.num(max))));
             }
             for (EffectSpec spec : r.getPermanentEffects()) spec.applyPermanent(p);
             if (!r.getWaterEffects().isEmpty() && p.isInWater()) {
@@ -195,9 +201,27 @@ public final class SkillManager {
         }
     }
 
+    /** Thanh HUD: trạng thái từng skill (sẵn sàng / đang hồi / khóa) + năng lượng. */
+    private String buildHud(Player p, PlayerRaceData d, Race r, boolean energyOn, double cur, double max) {
+        ConfigManager cm = plugin.configs();
+        List<String> parts = new ArrayList<>();
+        for (Skill s : r.getSkills()) {
+            String plain = s.getName().replaceAll("(?i)&(#[0-9a-f]{6}|[0-9a-fk-or])", "");
+            if (d.getLevel() < s.getUnlockLevel()) {
+                parts.add(cm.raw("hud-locked", "name", plain, "level", String.valueOf(s.getUnlockLevel())));
+                continue;
+            }
+            double rem = plugin.cooldowns().remaining(p.getUniqueId(), key(r, s));
+            if (rem > 0) parts.add(cm.raw("hud-cooldown", "name", plain, "time", String.valueOf((long) Math.ceil(rem))));
+            else parts.add(cm.raw("hud-ready", "name", s.getName()));
+        }
+        String skills = String.join(cm.raw("hud-separator"), parts);
+        if (!energyOn) return cm.raw("hud-noenergy", "skills", skills);
+        return cm.raw("hud", "skills", skills, "energy", ConfigManager.num(Math.floor(cur)), "max", ConfigManager.num(max));
+    }
+
     /** Dọn trạng thái tạm của người chơi (tránh rò rỉ bộ nhớ). */
     public void clear(UUID id) {
-        cooldowns.remove(id);
         energy.remove(id);
         noFallUntil.remove(id);
     }
