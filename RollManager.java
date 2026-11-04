@@ -458,7 +458,7 @@ public final class RollManager {
         inv.setItem(13, reelItem(result, rarities(), true));
 
         // Âm thanh + tiêu đề
-        p.playSound(p.getLocation(), SkillEffects.soundKey(ra.sound()), 1.0f, 1.0f);
+        p.playSound(p.getLocation(), ConfigManager.soundKey(ra.sound()), 1.0f, 1.0f);
         p.showTitle(Title.title(ConfigManager.color(cm.raw("roll-title", "race", result.getDisplayName())),
                 ConfigManager.color(cm.raw("roll-subtitle", "rarity", rarityText))));
         cm.send(p, "roll-result", "race", result.getDisplayName(), "rarity", rarityText);

@@ -5,18 +5,16 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.event.entity.EntityDamageEvent;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-/** Định nghĩa một chủng tộc, đọc hoàn toàn từ races.yml. */
+/** Định nghĩa một chủng tộc, đọc hoàn toàn từ races.yml: chỉ số, nội tại (passives), buff theo điều kiện, cosmetic. */
 public final class Race {
 
     private final String id;
@@ -33,20 +31,15 @@ public final class Race {
 
     private final double expBonus, vanillaExpBonus;
     private final double meleeMultiplier, bowMultiplier;
-    private final double undergroundMaxY, undergroundMultiplier;
-    private final double lowHealthThreshold, lowHealthMultiplier;
     private final List<EffectSpec> onHit;
-    private final List<EffectSpec> permanentEffects;
-    private final List<EffectSpec> waterEffects;
-    private final double waterDamageMultiplier;
-    private final CosmeticDef cosmetic;
     private final Set<String> immuneEffects = new HashSet<>();
     private final Set<String> damageTags = new HashSet<>();
     private final Map<String, Double> damageTaken = new HashMap<>();
     private final Map<String, Double> weakTo = new HashMap<>();
-    private final Map<String, Skill> skills = new LinkedHashMap<>();
+    private final List<BuffDef> buffs = new ArrayList<>();
+    private final CosmeticDef cosmetic;
 
-    public Race(String id, ConfigurationSection s, SkillManager skillManager, Logger log) {
+    public Race(String id, ConfigurationSection s, Logger log) {
         this.id = id;
         this.displayName = s.getString("display-name", id);
         Material m = Material.matchMaterial(s.getString("icon", "PLAYER_HEAD"));
@@ -71,32 +64,23 @@ public final class Race {
         vanillaExpBonus = s.getDouble("passives.vanilla-exp-bonus", 0.0);
         meleeMultiplier = s.getDouble("passives.melee-damage-multiplier", 1.0);
         bowMultiplier = s.getDouble("passives.bow-damage-multiplier", 1.0);
-        undergroundMaxY = s.contains("passives.underground.max-y")
-                ? s.getDouble("passives.underground.max-y") : -10000.0;
-        undergroundMultiplier = s.getDouble("passives.underground.damage-multiplier", 1.0);
-        lowHealthThreshold = s.getDouble("passives.low-health.threshold", 0.0);
-        lowHealthMultiplier = s.getDouble("passives.low-health.damage-multiplier", 1.0);
         onHit = EffectSpec.parse(s.getList("passives.on-hit"));
-        permanentEffects = EffectSpec.parse(s.getList("passives.permanent-effects"));
-        waterEffects = EffectSpec.parse(s.getList("passives.water-effects"));
-        waterDamageMultiplier = s.getDouble("passives.water-damage-multiplier", 1.0);
-        ConfigurationSection cs = s.getConfigurationSection("cosmetic");
-        cosmetic = cs == null ? null : new CosmeticDef(cs, log);
 
         for (String e : s.getStringList("passives.immune-effects")) immuneEffects.add(e.toUpperCase(Locale.ROOT));
         for (String t : s.getStringList("passives.damage-tags")) damageTags.add(t.toUpperCase(Locale.ROOT));
         readMap(s.getConfigurationSection("passives.damage-taken"), damageTaken);
         readMap(s.getConfigurationSection("passives.weak-to"), weakTo);
 
-        ConfigurationSection sk = s.getConfigurationSection("skills");
-        if (sk != null) {
-            for (String key : sk.getKeys(false)) {
-                ConfigurationSection ss = sk.getConfigurationSection(key);
-                if (ss == null) continue;
-                Skill skill = skillManager.buildSkill(key.toLowerCase(Locale.ROOT), ss);
-                if (skill != null) skills.put(skill.getId(), skill);
+        ConfigurationSection bs = s.getConfigurationSection("buffs");
+        if (bs != null) {
+            for (String key : bs.getKeys(false)) {
+                ConfigurationSection b = bs.getConfigurationSection(key);
+                if (b != null) buffs.add(new BuffDef(key.toLowerCase(Locale.ROOT), b, log));
             }
         }
+
+        ConfigurationSection cs = s.getConfigurationSection("cosmetic");
+        cosmetic = cs == null ? null : new CosmeticDef(cs, log);
     }
 
     private static void readMap(ConfigurationSection sec, Map<String, Double> out) {
@@ -135,19 +119,10 @@ public final class Race {
     public double getVanillaExpBonus() { return vanillaExpBonus; }
     public double getMeleeMultiplier() { return meleeMultiplier; }
     public double getBowMultiplier() { return bowMultiplier; }
-    public double getUndergroundMaxY() { return undergroundMaxY; }
-    public double getUndergroundMultiplier() { return undergroundMultiplier; }
-    public double getLowHealthThreshold() { return lowHealthThreshold; }
-    public double getLowHealthMultiplier() { return lowHealthMultiplier; }
     public List<EffectSpec> getOnHit() { return onHit; }
-    public List<EffectSpec> getPermanentEffects() { return permanentEffects; }
-    public List<EffectSpec> getWaterEffects() { return waterEffects; }
-    public double getWaterDamageMultiplier() { return waterDamageMultiplier; }
-    public CosmeticDef getCosmetic() { return cosmetic; }
     public Set<String> getImmuneEffects() { return immuneEffects; }
     public Set<String> getDamageTags() { return Collections.unmodifiableSet(damageTags); }
+    public CosmeticDef getCosmetic() { return cosmetic; }
 
-    public Collection<Skill> getSkills() { return Collections.unmodifiableCollection(skills.values()); }
-    public Skill getSkill(String skillId) { return skills.get(skillId.toLowerCase(Locale.ROOT)); }
-    public List<String> getSkillIds() { return new ArrayList<>(skills.keySet()); }
+    public List<BuffDef> getBuffs() { return Collections.unmodifiableList(buffs); }
 }

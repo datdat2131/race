@@ -102,6 +102,12 @@ public final class ConfigManager {
         p.sendActionBar(color(raw(key, kv)));
     }
 
+    /** Chuẩn hóa khoá âm thanh: ENTITY_BLAZE_SHOOT → entity.blaze.shoot; khoá có dấu chấm giữ nguyên. */
+    public static String soundKey(String s) {
+        if (s.contains(".") || s.contains(":")) return s.toLowerCase(Locale.ROOT);
+        return s.toLowerCase(Locale.ROOT).replace('_', '.');
+    }
+
     public static String num(double d) {
         if (d == Math.rint(d)) return String.valueOf((long) d);
         return String.format(Locale.US, "%.1f", d);

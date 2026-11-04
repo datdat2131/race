@@ -15,7 +15,7 @@ import java.util.Locale;
 /** Xử lý lệnh /race và tab completion. */
 public final class CommandManager implements CommandExecutor, TabCompleter {
 
-    private static final List<String> PLAYER_SUBS = List.of("choose", "info", "skill", "upgrade", "item", "level", "roll", "pity", "ticket", "help");
+    private static final List<String> PLAYER_SUBS = List.of("choose", "info", "buffs", "upgrade", "level", "roll", "pity", "ticket", "help");
     private static final List<String> ADMIN_SUBS = List.of("reload", "set", "reset", "giveexp");
 
     private final AstraXRace plugin;
@@ -47,9 +47,8 @@ public final class CommandManager implements CommandExecutor, TabCompleter {
         switch (sub) {
             case "choose" -> choose(sender, args);
             case "info" -> info(sender);
-            case "skill" -> skill(sender, args);
+            case "buffs" -> buffs(sender);
             case "upgrade" -> upgrade(sender);
-            case "item" -> item(sender);
             case "roll" -> roll(sender);
             case "pity" -> pity(sender);
             case "ticket" -> ticket(sender, args);
@@ -132,54 +131,9 @@ public final class CommandManager implements CommandExecutor, TabCompleter {
                 "changes_left", rm.changesLeft(d));
     }
 
-    private void skill(CommandSender sender, String[] args) {
-        Player p = player(sender);
-        if (p == null) return;
-        PlayerRaceData d = plugin.races().data(p);
-        Race r = plugin.races().raceOf(d);
-        if (d == null || r == null) {
-            cm().send(p, "no-race");
-            return;
-        }
-        if (args.length >= 2) {
-            Skill s = r.getSkill(args[1]);
-            if (s == null) {
-                cm().send(p, "skill-unknown", "skill", args[1]);
-                return;
-            }
-            plugin.skills().castAndNotify(p, s);
-            return;
-        }
-        cm().sendRaw(p, "skill-list-header");
-        for (Skill s : r.getSkills()) {
-            String status;
-            long left = plugin.skills().cooldownRemaining(p.getUniqueId(), r, s);
-            if (d.getLevel() < s.getUnlockLevel()) status = cm().raw("skill-status-locked");
-            else if (left > 0) status = cm().raw("skill-status-cooldown", "seconds", String.valueOf(left));
-            else status = cm().raw("skill-status-ready");
-            cm().sendRaw(p, "skill-list-line",
-                    "id", s.getId(), "name", s.getName(),
-                    "level", String.valueOf(s.getUnlockLevel()),
-                    "cooldown", ConfigManager.num(s.getCooldown()),
-                    "cost", ConfigManager.num(s.getEnergyCost()),
-                    "trigger", s.getTrigger(), "status", status);
-        }
-    }
-
     private void upgrade(CommandSender sender) {
         Player p = player(sender);
         if (p != null) plugin.guis().openUpgrade(p);
-    }
-
-    private void item(CommandSender sender) {
-        Player p = player(sender);
-        if (p == null) return;
-        if (plugin.races().raceOf(p) == null) {
-            cm().send(p, "no-race");
-            return;
-        }
-        plugin.skills().giveSkillItem(p, false);
-        cm().send(p, "item-given");
     }
 
     private void level(CommandSender sender, String[] args) {
@@ -205,6 +159,32 @@ public final class CommandManager implements CommandExecutor, TabCompleter {
                 "exp", String.valueOf(d.getExp()),
                 "required", d.getLevel() >= rm.maxLevel() ? "MAX" : String.valueOf(rm.requiredExp(d.getLevel())),
                 "points", String.valueOf(d.getPoints()));
+    }
+
+    // ---------------- Buff ----------------
+    private void buffs(CommandSender sender) {
+        Player p = player(sender);
+        if (p == null) return;
+        PlayerRaceData d = plugin.races().data(p);
+        Race r = plugin.races().raceOf(d);
+        if (d == null || r == null) {
+            cm().send(p, "no-race");
+            return;
+        }
+        if (r.getBuffs().isEmpty()) {
+            cm().send(p, "buffs-none");
+            return;
+        }
+        cm().sendRaw(p, "buffs-header");
+        for (BuffDef b : r.getBuffs()) {
+            String status;
+            if (d.getLevel() < b.unlockLevel()) status = cm().raw("buff-status-locked", "level", String.valueOf(b.unlockLevel()));
+            else if (plugin.buffs().conditionMet(p, b)) status = cm().raw("buff-status-active");
+            else status = cm().raw("buff-status-inactive");
+            cm().sendRaw(p, "buff-line", "status", status, "name", b.name(),
+                    "condition", cm().raw("cond-" + b.condition().name()));
+            for (String line : b.description()) p.sendMessage(ConfigManager.color("   " + line));
+        }
     }
 
     // ---------------- Vé roll tộc ----------------
@@ -343,12 +323,6 @@ public final class CommandManager implements CommandExecutor, TabCompleter {
             switch (sub) {
                 case "choose" -> {
                     return filter(raceIds(), args[1]);
-                }
-                case "skill" -> {
-                    if (sender instanceof Player p) {
-                        Race r = plugin.races().raceOf(p);
-                        if (r != null) return filter(r.getSkillIds(), args[1]);
-                    }
                 }
                 case "set", "reset", "giveexp", "level" -> {
                     if (isAdmin) return filter(playerNames(), args[1]);

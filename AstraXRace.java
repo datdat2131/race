@@ -7,16 +7,15 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.List;
 
-/** AstraXRace - hệ thống chủng tộc cho BoxMine RPG (Paper 1.21.x, Java 21). */
+/** AstraXRace - hệ thống chủng tộc (chỉ số + nội tại + buff theo điều kiện) cho BoxMine RPG (Paper 1.21.x, Java 21). */
 public final class AstraXRace extends JavaPlugin {
 
     private ConfigManager configs;
     private StorageManager storage;
-    private SkillManager skills;
     private RaceManager races;
+    private BuffManager buffs;
     private GUIManager guis;
     private CosmeticManager cosmetics;
-    private CooldownManager cooldowns;
     private RollManager rolls;
     private boolean ready;
 
@@ -34,12 +33,11 @@ public final class AstraXRace extends JavaPlugin {
             return;
         }
 
-        skills = new SkillManager(this);
         races = new RaceManager(this);
         races.loadRaces();
+        buffs = new BuffManager(this);
         guis = new GUIManager(this);
         cosmetics = new CosmeticManager(this);
-        cooldowns = new CooldownManager(this);
         rolls = new RollManager(this);
 
         CommandManager commands = new CommandManager(this);
@@ -58,13 +56,12 @@ public final class AstraXRace extends JavaPlugin {
         for (Player p : Bukkit.getOnlinePlayers()) races.attach(p);
         cosmetics.start();
 
-        Bukkit.getScheduler().runTaskTimer(this, skills::tick, 20L, 20L);
-        Bukkit.getScheduler().runTaskTimer(this, cooldowns::tick, 10L, 2L);
+        Bukkit.getScheduler().runTaskTimer(this, buffs::tick, 20L, 20L);
         long autosave = Math.max(1, configs.config().getLong("storage.autosave-minutes", 5)) * 1200L;
         Bukkit.getScheduler().runTaskTimer(this, races::saveDirty, autosave, autosave);
 
         ready = true;
-        getLogger().info("AstraXRace đã sẵn sàng.");
+        getLogger().info("AstraXRace đã sẵn sàng (" + races.getRaces().size() + " chủng tộc).");
     }
 
     @Override
@@ -75,7 +72,6 @@ public final class AstraXRace extends JavaPlugin {
         }
         cosmetics.shutdown();
         rolls.shutdown();
-        cooldowns.shutdown();
         for (Player p : Bukkit.getOnlinePlayers()) races.clearAttributes(p);
         storage.shutdown(races.snapshots());
     }
@@ -84,20 +80,16 @@ public final class AstraXRace extends JavaPlugin {
     public void reloadAll() {
         configs.load();
         races.loadRaces();
-        for (Player p : Bukkit.getOnlinePlayers()) {
-            races.applyAttributes(p);
-            skills.initEnergy(p);
-        }
+        for (Player p : Bukkit.getOnlinePlayers()) races.applyAttributes(p);
         cosmetics.start();
         cosmetics.refreshAll();
     }
 
     public ConfigManager configs() { return configs; }
     public StorageManager storage() { return storage; }
-    public SkillManager skills() { return skills; }
     public RaceManager races() { return races; }
+    public BuffManager buffs() { return buffs; }
     public GUIManager guis() { return guis; }
     public CosmeticManager cosmetics() { return cosmetics; }
-    public CooldownManager cooldowns() { return cooldowns; }
     public RollManager rolls() { return rolls; }
 }

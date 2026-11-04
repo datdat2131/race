@@ -28,7 +28,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public final class RaceManager {
 
     public static final List<String> UPGRADES =
-            List.of("strength", "defense", "speed", "health", "critical", "skill_power");
+            List.of("strength", "defense", "speed", "health", "critical", "regen");
 
     /** {tên attribute (không prefix), key modifier} */
     private static final String[][] ATTRS = {
@@ -64,7 +64,7 @@ public final class RaceManager {
                 if (rs == null) continue;
                 try {
                     String rid = id.toLowerCase(Locale.ROOT);
-                    loaded.put(rid, new Race(rid, rs, plugin.skills(), plugin.getLogger()));
+                    loaded.put(rid, new Race(rid, rs, plugin.getLogger()));
                 } catch (Exception e) {
                     plugin.getLogger().warning("Không thể nạp race '" + id + "': " + e.getMessage());
                 }
@@ -138,7 +138,6 @@ public final class RaceManager {
     public void attach(Player p) {
         ensureData(p);
         applyAttributes(p);
-        plugin.skills().initEnergy(p);
         plugin.cosmetics().refresh(p);
     }
 
@@ -146,11 +145,9 @@ public final class RaceManager {
     public void detach(Player p) {
         plugin.cosmetics().remove(p);
         plugin.rolls().onQuit(p);
-        plugin.cooldowns().onQuit(p);
         clearAttributes(p);
         PlayerRaceData d = cache.remove(p.getUniqueId());
         if (d != null && d.isPersistable()) plugin.storage().saveAsync(d.copy());
-        plugin.skills().clear(p.getUniqueId());
     }
 
     public void save(PlayerRaceData d) {
@@ -211,10 +208,10 @@ public final class RaceManager {
         p.showTitle(Title.title(ConfigManager.color(cm.raw("level-up-title")),
                 ConfigManager.color(cm.raw("level-up-subtitle", "level", String.valueOf(d.getLevel())))));
         String snd = cfg().getString("leveling.level-up-sound", "entity.player.levelup");
-        if (snd != null && !snd.isEmpty()) p.playSound(p.getLocation(), SkillEffects.soundKey(snd), 1f, 1f);
-        for (Skill s : r.getSkills()) {
-            if (s.getUnlockLevel() == d.getLevel()) {
-                cm.send(p, "skill-unlocked", "skill", s.getName());
+        if (snd != null && !snd.isEmpty()) p.playSound(p.getLocation(), ConfigManager.soundKey(snd), 1f, 1f);
+        for (BuffDef b : r.getBuffs()) {
+            if (b.unlockLevel() == d.getLevel() && d.getLevel() > 1) {
+                cm.send(p, "buff-unlocked", "buff", b.name());
             }
         }
     }
@@ -251,8 +248,6 @@ public final class RaceManager {
         d.setRace(race.getId());
         if (differs && hadRace && cfg().getBoolean("race.reset-progress-on-change", true)) resetProgress(d);
         applyAttributes(p);
-        plugin.skills().initEnergy(p);
-        plugin.skills().giveSkillItem(p, false);
         plugin.cosmetics().refresh(p);
         save(d);
         return ChooseResult.OK;
@@ -372,19 +367,14 @@ public final class RaceManager {
         double m = strengthOf(d, r);
         if (melee) m *= r.getMeleeMultiplier();
         if (arrow) m *= r.getBowMultiplier();
-        if (attacker.getLocation().getY() <= r.getUndergroundMaxY()) m *= r.getUndergroundMultiplier();
-        if (r.getWaterDamageMultiplier() != 1.0 && attacker.isInWater()) m *= r.getWaterDamageMultiplier();
-        if (r.getLowHealthThreshold() > 0) {
-            double ratio = attacker.getHealth() / Math.max(1.0, maxHealth(attacker));
-            if (ratio <= r.getLowHealthThreshold()) m *= r.getLowHealthMultiplier();
-        }
+        m *= plugin.buffs().damageMultiplier(attacker, d, r);
         double crit = critOf(d, r);
         if (crit > 0 && ThreadLocalRandom.current().nextDouble() < crit) {
             m *= cfg().getDouble("combat.critical-multiplier", 1.5);
             Location l = attacker.getLocation().add(0, 1.5, 0);
             attacker.getWorld().spawnParticle(Particle.CRIT, l, 12, 0.4, 0.4, 0.4, 0.2);
             String snd = cfg().getString("combat.critical-sound", "");
-            if (snd != null && !snd.isEmpty()) attacker.playSound(attacker.getLocation(), SkillEffects.soundKey(snd), 1f, 1f);
+            if (snd != null && !snd.isEmpty()) attacker.playSound(attacker.getLocation(), ConfigManager.soundKey(snd), 1f, 1f);
         }
         return m;
     }
@@ -397,6 +387,7 @@ public final class RaceManager {
         double m = r.damageTakenMultiplier(cause);
         for (String tag : attackerTags) m *= r.weakness(tag);
         m *= Math.max(0.1, 1.0 - upgradeBonus(d, "defense"));
+        m *= plugin.buffs().defenseMultiplier(victim, d, r);
         return m;
     }
 }

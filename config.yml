@@ -19,7 +19,6 @@ leveling:
   exp-growth: 1.12          # EXP cần = exp-base * exp-growth^(cấp-1)
   points-per-level: 1       # điểm nâng cấp nhận mỗi cấp
   starting-points: 0
-  skill-power-per-level: 0.005   # +0.5% sức mạnh skill mỗi cấp race
   level-up-sound: entity.player.levelup
 
 exp:
@@ -43,27 +42,6 @@ combat:
   critical-multiplier: 1.5  # nhân sát thương khi chí mạng
   critical-sound: entity.player.attack.crit
 
-energy:
-  enabled: true
-  max: 100
-  per-level: 1.0            # +1 năng lượng tối đa mỗi cấp
-  regen-per-second: 3.0
-  show-actionbar-when-holding-item: true
-
-# Vật phẩm kích hoạt skill: chuột phải = skill trigger RIGHT_CLICK, Shift + chuột phải = SHIFT_RIGHT_CLICK
-skill-item:
-  enabled: true
-  require-item: true        # false = chuột phải bất kỳ (tay không) cũng kích hoạt (không khuyến nghị)
-  give-on-choose: true
-  give-on-respawn: true
-  material: BLAZE_ROD
-  name: '&6&lGậy Chủng Tộc'
-  lore:
-    - '&7Chuột phải: &fKỹ năng 1'
-    - '&7Shift + Chuột phải: &fKỹ năng 2'
-    - '&8/race skill <tên> cho kỹ năng khác'
-  glow: true
-
 # ---------------- Cosmetic nhận dạng (cánh, vật phẩm đi theo, đuôi) ----------------
 # Định nghĩa từng race nằm trong races.yml (mục cosmetic). Cosmetic dùng ItemDisplay,
 # không lưu xuống đĩa và tự dọn khi người chơi thoát / đổi race / tắt plugin.
@@ -82,7 +60,7 @@ cosmetic:
 #   speed      : +hệ số tốc độ di chuyển
 #   health     : +máu (HP, 2 HP = 1 tim)
 #   critical   : +tỉ lệ chí mạng (0.01 = +1%)
-#   skill_power: +hệ số sức mạnh skill
+#   regen      : +HP hồi mỗi giây (cộng với buff hồi máu của tộc)
 upgrades:
   strength:
     slot: 10
@@ -139,16 +117,16 @@ upgrades:
     display-multiplier: 100
     unit: '%'
     lore: ['{desc}', ' ', '&7Cấp: &f{level}&7/&f{max}', '&7Hiện tại: &a+{bonus}', '&7Mỗi cấp: &e+{per}', '&7Giá: &6{cost} điểm']
-  skill_power:
+  regen:
     slot: 16
-    material: BLAZE_POWDER
-    name: '&d&lSkill Power'
-    description: '&7Tăng sát thương/hồi máu của kỹ năng.'
+    material: GOLDEN_CARROT
+    name: '&d&lRegen'
+    description: '&7Hồi máu liên tục mỗi giây.'
     max-level: 10
     cost: 1
-    per-level: 0.03
-    display-multiplier: 100
-    unit: '%'
+    per-level: 0.1
+    display-multiplier: 1
+    unit: ' HP/s'
     lore: ['{desc}', ' ', '&7Cấp: &f{level}&7/&f{max}', '&7Hiện tại: &a+{bonus}', '&7Mỗi cấp: &e+{per}', '&7Giá: &6{cost} điểm']
 
 # ---------------- GUI ----------------
@@ -181,11 +159,11 @@ gui:
         - '&7Nhảy cao: &f+{jump}%'
         - '&7Kháng knockback: &f{knockback}%'
         - '&7Chí mạng: &f{critical}%'
-    skills:
+    buffs:
       slot: 21
       material: BLAZE_POWDER
-      name: '&d&lKỹ năng'
-      line: '&e{name} &8(Lv {level} | CD {cooldown}s | {trigger})'
+      name: '&d&lBuff'
+      line: '&e{name} &8(Lv {level} • {condition})'
       desc-prefix: '  &7'
     strengths:
       slot: 23
@@ -266,15 +244,6 @@ ticket:
     - '&8Bảo hiểm: Sử thi sau 25 lượt, Huyền thoại sau 80 lượt'
     - '&8Kiểm tra bảo hiểm: /race pity'
   glow: true
-
-# ---------------- Hồi chiêu ----------------
-cooldown:
-  hud: true                     # khi cầm Gậy Chủng Tộc: ActionBar hiện trạng thái từng skill (✔ sẵn sàng / số giây hồi)
-  bossbar: true                 # BossBar tiến độ hồi chiêu của skill vừa dùng
-  bar-color: PURPLE             # PINK | BLUE | RED | GREEN | YELLOW | PURPLE | WHITE
-  bar-overlay: PROGRESS         # PROGRESS | NOTCHED_6 | NOTCHED_10 | NOTCHED_12 | NOTCHED_20
-  ready-notify: true            # thông báo + âm thanh khi skill hồi xong
-  ready-sound: entity.experience_orb.pickup
 
 placeholders:
   no-race: 'Chưa có'

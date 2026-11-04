@@ -99,17 +99,16 @@ public final class GUIManager {
                 "knockback", pct(r.getKnockback()),
                 "critical", pct(r.getCritical())), null);
 
-        ConfigurationSection sk = sec("gui.detail.skills");
-        List<String> skillLore = new ArrayList<>();
-        for (Skill s : r.getSkills()) {
-            skillLore.add(ConfigManager.replace(sk.getString("line", "&e{name}"),
-                    "name", s.getName(),
-                    "level", String.valueOf(s.getUnlockLevel()),
-                    "cooldown", ConfigManager.num(s.getCooldown()),
-                    "trigger", s.getTrigger()));
-            for (String line : s.getDescription()) skillLore.add(sk.getString("desc-prefix", "  &7") + line);
+        ConfigurationSection bf = sec("gui.detail.buffs");
+        List<String> buffLore = new ArrayList<>();
+        for (BuffDef bd : r.getBuffs()) {
+            buffLore.add(ConfigManager.replace(bf.getString("line", "&e{name}"),
+                    "name", bd.name(),
+                    "level", String.valueOf(bd.unlockLevel()),
+                    "condition", cm().raw("cond-" + bd.condition().name())));
+            for (String line : bd.description()) buffLore.add(bf.getString("desc-prefix", "  &7") + line);
         }
-        place(inv, h, sk.getInt("slot", 21), cm().item(sk, skillLore), null);
+        place(inv, h, bf.getInt("slot", 21), cm().item(bf, buffLore), null);
 
         ConfigurationSection su = sec("gui.detail.strengths");
         List<String> strong = new ArrayList<>();

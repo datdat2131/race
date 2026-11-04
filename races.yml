@@ -1,19 +1,20 @@
 # ============================================================
-#  AstraXRace - định nghĩa chủng tộc & kỹ năng
+#  AstraXRace - định nghĩa chủng tộc, nội tại và BUFF
 #
-#  stats:   health (HP, 20 = 10 tim), speed (1.0 = bình thường), strength (hệ số sát thương),
-#           jump (+% độ cao nhảy, 0.2 = +20%), knockback-resistance (0..1), critical-chance (0..1)
-#  rarity:  độ hiếm khi roll bằng vé (COMMON | RARE | EPIC | LEGENDARY, cấu hình ở config.yml mục roll)
-#  growth:  chỉ số cộng thêm MỖI cấp race
-#  passives: nội tại (xem README)
+#  stats:    health (HP, 20 = 10 tim), speed (1.0 = bình thường), strength (hệ số sát thương),
+#            jump (+% độ cao nhảy, 0.2 = +20%), knockback-resistance (0..1), critical-chance (0..1)
+#  rarity:   độ hiếm khi roll bằng vé (COMMON | RARE | EPIC | LEGENDARY, cấu hình ở config.yml mục roll)
+#  growth:   chỉ số cộng thêm MỖI cấp race
+#  passives: nội tại luôn bật (xem README)
+#  buffs:    buff TỰ ĐỘNG khi đúng điều kiện và đủ cấp mở khóa (không cần bấm gì)
+#            condition: ALWAYS IN_WATER UNDERGROUND NIGHT DAY LOW_HEALTH FULL_HEALTH IN_NETHER IN_END
+#                       IN_RAIN SNEAKING SPRINTING ON_FIRE HIGH_ALTITUDE
+#            tác dụng:  effects (potion), damage-multiplier (sát thương gây ra), defense-multiplier (sát thương nhận,
+#                       <1 = giảm; >1 = điểm yếu), regen (HP/giây), on-kill, on-hurt
 #  cosmetic: cánh / vật phẩm đi theo / đuôi nhận dạng (xem README mục Cosmetic)
-#            "back" = khoảng cách lùi ra sau lưng (càng lớn càng xa người chơi)
-#  skills.<id>.type: AOE_DAMAGE | SELF_BUFF | HEAL | NO_FALL
-#  skills.<id>.trigger: RIGHT_CLICK | SHIFT_RIGHT_CLICK | COMMAND (/race skill <id>)
-#  skills.<id>.effects: sounds (nhiều lớp), particle, animations (nhiều lớp: RING, SHOCKWAVE, SPIRAL,
-#            VORTEX, PILLAR, BURST, DOME, TRAIL), impact, landing (xem README)
-#  Hiệu ứng potion dùng ID Minecraft: SPEED, STRENGTH, RESISTANCE, REGENERATION, WITHER,
-#  SLOWNESS, JUMP_BOOST, ABSORPTION, SLOW_FALLING... ; riêng type FIRE = đốt cháy (duration = tick)
+#  Hiệu ứng potion dùng ID Minecraft: SPEED, STRENGTH, RESISTANCE, REGENERATION, WITHER, SLOWNESS, JUMP_BOOST,
+#  ABSORPTION, SLOW_FALLING, NIGHT_VISION... ; riêng type FIRE = đốt cháy (duration = tick)
+#  Với buff theo điều kiện, để duration: 40 (tự gia hạn mỗi giây); NIGHT_VISION dùng 260 để không nhấp nháy.
 # ============================================================
 
 races:
@@ -29,13 +30,39 @@ races:
     stats: {health: 20.0, speed: 1.0, strength: 1.0, jump: 0.0, knockback-resistance: 0.0, critical-chance: 0.05}
     growth: {health: 0.2, speed: 0.0005, strength: 0.005}
     strengths:
-      - 'Cân bằng tất cả chỉ số'
       - 'Nhận thêm 10% EXP (Race EXP và EXP thường)'
+      - 'Chỉ số cân bằng, hồi phục nhẹ liên tục'
+      - 'Máu dưới 30%: hồi phục + giảm 10% sát thương nhận'
+      - 'Máu đầy: gây thêm 8% sát thương'
     weaknesses:
-      - 'Không có điểm yếu rõ rệt (cũng không có điểm vượt trội)'
+      - 'Không có điểm vượt trội về chỉ số'
     passives:
       exp-bonus: 0.10
       vanilla-exp-bonus: 0.10
+    buffs:
+      adaptive:
+        name: '&fThích nghi'
+        description: ['Hồi phục nhẹ liên tục (+0.15 HP/giây).']
+        condition: ALWAYS
+        unlock-level: 1
+        regen: 0.15
+      second-wind:
+        name: '&aHơi thở thứ hai'
+        description: ['Máu dưới 30%: hồi phục, kháng sát thương, giảm 10% sát thương nhận.']
+        condition: LOW_HEALTH
+        threshold: 0.3
+        unlock-level: 5
+        effects:
+          - {type: REGENERATION, duration: 40, amplifier: 1}
+          - {type: RESISTANCE, duration: 40, amplifier: 0}
+        defense-multiplier: 0.9
+      focus:
+        name: '&eTập trung'
+        description: ['Máu đầy (từ 90%): gây thêm 8% sát thương.']
+        condition: FULL_HEALTH
+        threshold: 0.9
+        unlock-level: 15
+        damage-multiplier: 1.08
     cosmetic:
       parts:
         shield:
@@ -44,54 +71,6 @@ races:
           scale: 1.1
           up: 1.35
           back: 0.8
-    skills:
-      second-wind:
-        type: HEAL
-        name: '&aSecond Wind'
-        description: ['Hồi máu mạnh cho bản thân và đồng đội, kèm hồi phục và giáp ảo.']
-        unlock-level: 1
-        cooldown: 40
-        energy-cost: 30
-        trigger: RIGHT_CLICK
-        params:
-          amount: 10.0
-          radius: 5.0
-          cleanse: [POISON, WITHER, WEAKNESS]
-          effects:
-            - {type: REGENERATION, duration: 100, amplifier: 1}
-            - {type: ABSORPTION, duration: 200, amplifier: 0}
-        effects:
-          sounds:
-            cast: {key: entity.player.levelup, volume: 1.0, pitch: 1.3}
-            chime: {key: block.amethyst_block.chime, volume: 1.0, pitch: 1.5, delay: 3}
-          particle: {type: HEART, count: 12, spread: 0.7, speed: 0}
-          animations:
-            spiral: {type: SPIRAL, particle: HAPPY_VILLAGER, radius: 1.2, height: 2.4, duration: 24}
-            pillar: {type: PILLAR, particle: END_ROD, radius: 0.8, height: 2.5, duration: 20, count: 10}
-            wave: {type: SHOCKWAVE, particle: TOTEM_OF_UNDYING, radius: 5.0, duration: 12, count: 30}
-          impact:
-            particle: {type: HEART, count: 4, spread: 0.4, speed: 0}
-      adrenaline:
-        type: SELF_BUFF
-        name: '&eAdrenaline'
-        description: ['Bùng nổ: tăng mạnh tốc độ, sức mạnh và kháng sát thương.']
-        unlock-level: 10
-        cooldown: 55
-        energy-cost: 40
-        trigger: SHIFT_RIGHT_CLICK
-        params:
-          effects:
-            - {type: SPEED, duration: 200, amplifier: 2}
-            - {type: STRENGTH, duration: 200, amplifier: 1}
-            - {type: RESISTANCE, duration: 100, amplifier: 0}
-        effects:
-          sounds:
-            cast: {key: entity.horse.gallop, volume: 1.0, pitch: 1.2}
-            zap: {key: entity.lightning_bolt.impact, volume: 0.6, pitch: 1.8, delay: 2}
-          particle: {type: CRIT, count: 40, spread: 0.7, speed: 0.15}
-          animations:
-            wave: {type: SHOCKWAVE, particle: CRIT, radius: 3.0, duration: 8}
-            vortex: {type: VORTEX, particle: ELECTRIC_SPARK, radius: 1.5, height: 2.2, duration: 16}
 
   elf:
     display-name: '&a&lElf'
@@ -104,13 +83,39 @@ races:
     stats: {health: 16.0, speed: 1.10, strength: 1.0, jump: 0.2, knockback-resistance: 0.0, critical-chance: 0.05}
     growth: {health: 0.15, speed: 0.0005, strength: 0.004}
     strengths:
-      - 'Tốc độ di chuyển +10%'
-      - 'Nhảy cao hơn'
+      - 'Tốc độ di chuyển +10%, nhảy cao hơn'
       - 'Sát thương cung +20%'
+      - 'Ban ngày: chạy nhanh hơn + hồi máu'
+      - 'Ban đêm: nhìn xuyên đêm + nhảy cao'
+      - 'Chạy nước rút: tăng tốc thêm'
     weaknesses:
       - 'Máu thấp hơn Human (-2 tim)'
     passives:
       bow-damage-multiplier: 1.20
+    buffs:
+      sun-blessing:
+        name: '&eÁnh dương rừng xanh'
+        description: ['Ban ngày ngoài trời: Speed I và hồi +0.2 HP/giây.']
+        condition: DAY
+        unlock-level: 1
+        effects:
+          - {type: SPEED, duration: 40, amplifier: 0}
+        regen: 0.2
+      moonlit-grace:
+        name: '&9Ân huệ ánh trăng'
+        description: ['Ban đêm: nhìn xuyên đêm và nhảy cao hơn.']
+        condition: NIGHT
+        unlock-level: 5
+        effects:
+          - {type: NIGHT_VISION, duration: 260, amplifier: 0}
+          - {type: JUMP_BOOST, duration: 40, amplifier: 0}
+      forest-sprint:
+        name: '&aBước chân rừng'
+        description: ['Khi chạy nước rút: Speed II.']
+        condition: SPRINTING
+        unlock-level: 10
+        effects:
+          - {type: SPEED, duration: 40, amplifier: 1}
     cosmetic:
       parts:
         leaf-wings:
@@ -134,61 +139,6 @@ races:
           tilt: 40
       particles:
         sparkle: {type: CHERRY_LEAVES, count: 1, spread: 0.5, speed: 0, interval: 14, at: BACK, moving-only: true}
-    skills:
-      thorn-bloom:
-        type: AOE_DAMAGE
-        name: '&2Thorn Bloom'
-        description: ['Gai nhọn nở rộ 3 đợt: sát thương, làm chậm và nhiễm độc.']
-        unlock-level: 1
-        cooldown: 12
-        energy-cost: 28
-        trigger: RIGHT_CLICK
-        params:
-          radius: 6.0
-          damage: 6.0
-          waves: 3
-          wave-interval: 6
-          knockback: 0.3
-          lift: 0.3
-          affect-players: true
-          affect-mobs: true
-          effects:
-            - {type: SLOWNESS, duration: 60, amplifier: 1}
-            - {type: POISON, duration: 80, amplifier: 0}
-        effects:
-          sounds:
-            bloom: {key: block.azalea_leaves.place, volume: 1.0, pitch: 0.8}
-            thorn: {key: block.sweet_berry_bush.pick_berries, volume: 1.0, pitch: 0.8, delay: 3}
-          particle: {type: HAPPY_VILLAGER, count: 40, spread: 1.2, speed: 0}
-          animations:
-            wave1: {type: SHOCKWAVE, particle: CHERRY_LEAVES, radius: 6.0, duration: 12, count: 34}
-            wave2: {type: SHOCKWAVE, particle: HAPPY_VILLAGER, radius: 6.0, duration: 12, delay: 6, count: 30}
-            spiral: {type: SPIRAL, particle: CHERRY_LEAVES, radius: 2.0, height: 2.5, duration: 20}
-          impact:
-            particle: {type: HAPPY_VILLAGER, count: 8, spread: 0.4, speed: 0}
-      natures-grace:
-        type: SELF_BUFF
-        name: '&aNature''s Grace'
-        description: ['Nhảy cực cao, hồi phục liên tục và chạy nhanh.']
-        unlock-level: 10
-        cooldown: 50
-        energy-cost: 35
-        trigger: SHIFT_RIGHT_CLICK
-        params:
-          heal: 4.0
-          effects:
-            - {type: JUMP_BOOST, duration: 240, amplifier: 2}
-            - {type: REGENERATION, duration: 160, amplifier: 1}
-            - {type: SPEED, duration: 240, amplifier: 1}
-        effects:
-          sounds:
-            chime: {key: block.amethyst_block.chime, volume: 1.0, pitch: 1.0}
-            grow: {key: block.azalea_leaves.place, volume: 1.0, pitch: 0.8, delay: 3}
-          particle: {type: HAPPY_VILLAGER, count: 35, spread: 0.8, speed: 0}
-          animations:
-            spiral: {type: SPIRAL, particle: HAPPY_VILLAGER, radius: 1.2, height: 2.4, duration: 26}
-            petals: {type: VORTEX, particle: CHERRY_LEAVES, radius: 2.0, height: 2.6, duration: 24}
-            wave: {type: SHOCKWAVE, particle: HAPPY_VILLAGER, radius: 3.5, duration: 12}
 
   dwarf:
     display-name: '&6&lDwarf'
@@ -203,13 +153,38 @@ races:
     strengths:
       - 'Máu +4 tim so với Human'
       - 'Kháng knockback 50%'
-      - 'Sát thương +25% khi ở dưới lòng đất (Y <= 50)'
+      - 'Dưới lòng đất (Y <= 50): đào nhanh, nhìn rõ, sát thương +25%'
+      - 'Khi bị đánh có 25% cơ hội kháng sát thương'
+      - 'Máu dưới 40%: giảm 20% sát thương nhận'
     weaknesses:
       - 'Tốc độ di chuyển thấp (-10%)'
-    passives:
-      underground:
-        max-y: 50
+    buffs:
+      deep-miner:
+        name: '&6Thợ mỏ dưới lòng đất'
+        description: ['Ở độ cao Y <= 50: Haste II, nhìn xuyên đêm, sát thương +25%.']
+        condition: UNDERGROUND
+        threshold: 50
+        unlock-level: 1
+        effects:
+          - {type: HASTE, duration: 40, amplifier: 1}
+          - {type: NIGHT_VISION, duration: 260, amplifier: 0}
         damage-multiplier: 1.25
+      stone-heart:
+        name: '&7Tim đá'
+        description: ['Khi bị đánh có 25% cơ hội nhận Resistance II trong 4 giây.']
+        condition: ALWAYS
+        unlock-level: 8
+        on-hurt:
+          chance: 0.25
+          effects:
+            - {type: RESISTANCE, duration: 80, amplifier: 1}
+      stubborn:
+        name: '&cCứng đầu'
+        description: ['Máu dưới 40%: giảm 20% sát thương nhận.']
+        condition: LOW_HEALTH
+        threshold: 0.4
+        unlock-level: 15
+        defense-multiplier: 0.8
     cosmetic:
       parts:
         pickaxe:
@@ -231,60 +206,6 @@ races:
           billboard: CENTER
       particles:
         ember: {type: SMALL_FLAME, count: 1, spread: 0.15, speed: 0.01, interval: 10, at: BACK}
-    skills:
-      earthquake:
-        type: AOE_DAMAGE
-        name: '&6Earthquake'
-        description: ['Động đất 3 đợt: sát thương lớn, hất tung và làm chậm kẻ địch.']
-        unlock-level: 1
-        cooldown: 14
-        energy-cost: 30
-        trigger: RIGHT_CLICK
-        params:
-          radius: 7.0
-          damage: 9.0
-          waves: 3
-          wave-interval: 8
-          knockback: 0.4
-          lift: 0.55
-          affect-players: true
-          affect-mobs: true
-          effects:
-            - {type: SLOWNESS, duration: 80, amplifier: 2}
-            - {type: WEAKNESS, duration: 80, amplifier: 0}
-        effects:
-          sounds:
-            boom: {key: entity.generic.explode, volume: 0.9, pitch: 0.5}
-            rumble: {key: block.stone.break, volume: 1.0, pitch: 0.5, delay: 4}
-            rumble2: {key: block.anvil.land, volume: 0.7, pitch: 0.6, delay: 9}
-          particle: {type: EXPLOSION, count: 4, spread: 1.5, speed: 0}
-          animations:
-            wave1: {type: SHOCKWAVE, particle: CRIT, radius: 7.0, duration: 12, count: 40}
-            wave2: {type: SHOCKWAVE, particle: LARGE_SMOKE, radius: 7.0, duration: 12, delay: 8, count: 32}
-            wave3: {type: SHOCKWAVE, particle: CRIT, radius: 7.0, duration: 12, delay: 16, count: 40}
-          impact:
-            particle: {type: EXPLOSION, count: 1, spread: 0.2, speed: 0}
-            sound: {key: block.stone.break, volume: 0.8, pitch: 0.7}
-      stone-skin:
-        type: SELF_BUFF
-        name: '&7Stone Skin'
-        description: ['Da hóa đá: kháng sát thương rất cao và giáp ảo dày.']
-        unlock-level: 10
-        cooldown: 60
-        energy-cost: 40
-        trigger: SHIFT_RIGHT_CLICK
-        params:
-          effects:
-            - {type: RESISTANCE, duration: 240, amplifier: 2}
-            - {type: ABSORPTION, duration: 240, amplifier: 3}
-        effects:
-          sounds:
-            crack: {key: block.stone.break, volume: 1.0, pitch: 0.7}
-            thud: {key: block.anvil.place, volume: 0.8, pitch: 0.8, delay: 3}
-          particle: {type: CRIT, count: 40, spread: 0.7, speed: 0.1}
-          animations:
-            dome: {type: DOME, particle: CRIT, radius: 2.0, duration: 12, count: 36}
-            wave: {type: SHOCKWAVE, particle: LARGE_SMOKE, radius: 3.0, duration: 8}
 
   orc:
     display-name: '&2&lOrc'
@@ -298,14 +219,39 @@ races:
     growth: {health: 0.25, speed: 0.0003, strength: 0.006}
     strengths:
       - 'Sát thương cận chiến +15%'
-      - 'Khi máu <= 35%: sát thương +25%'
+      - 'Máu dưới 35%: Strength và sát thương +25%'
+      - 'Hạ gục kẻ địch: hồi máu và tăng sức mạnh'
+      - 'Chạy nước rút: sát thương +10%'
     weaknesses:
       - 'Tốc độ di chuyển thấp hơn (-8%)'
     passives:
       melee-damage-multiplier: 1.15
-      low-health:
+    buffs:
+      bloodlust:
+        name: '&4Khát máu'
+        description: ['Máu dưới 35%: Strength I và gây thêm 25% sát thương.']
+        condition: LOW_HEALTH
         threshold: 0.35
+        unlock-level: 1
+        effects:
+          - {type: STRENGTH, duration: 40, amplifier: 0}
         damage-multiplier: 1.25
+      blood-frenzy:
+        name: '&cCuồng huyết'
+        description: ['Hạ gục: hồi 2 HP, Strength II và Speed I trong 5 giây.']
+        condition: ALWAYS
+        unlock-level: 8
+        on-kill:
+          heal: 2.0
+          effects:
+            - {type: STRENGTH, duration: 100, amplifier: 1}
+            - {type: SPEED, duration: 100, amplifier: 0}
+      charge:
+        name: '&2Xung phong'
+        description: ['Khi chạy nước rút: gây thêm 10% sát thương.']
+        condition: SPRINTING
+        unlock-level: 15
+        damage-multiplier: 1.1
     cosmetic:
       parts:
         crossed-axes:
@@ -316,58 +262,6 @@ races:
           up: 1.3
           back: 0.85
           tilt: 40
-    skills:
-      battle-cry:
-        type: SELF_BUFF
-        name: '&cBattle Cry'
-        description: ['Gầm thét: tăng cực mạnh sức mạnh, kháng đòn, hồi máu.']
-        unlock-level: 1
-        cooldown: 40
-        energy-cost: 35
-        trigger: RIGHT_CLICK
-        params:
-          heal: 4.0
-          effects:
-            - {type: STRENGTH, duration: 240, amplifier: 2}
-            - {type: RESISTANCE, duration: 120, amplifier: 1}
-            - {type: SPEED, duration: 240, amplifier: 0}
-        effects:
-          sounds:
-            roar: {key: entity.ravager.roar, volume: 1.0, pitch: 0.9}
-            horn: {key: event.raid.horn, volume: 0.6, pitch: 1.2, delay: 5}
-          particle: {type: ANGRY_VILLAGER, count: 14, spread: 0.7, speed: 0}
-          animations:
-            wave: {type: SHOCKWAVE, particle: ANGRY_VILLAGER, radius: 4.0, duration: 10, count: 24}
-            pillar: {type: PILLAR, particle: CRIT, radius: 1.0, height: 2.6, duration: 14}
-      ground-smash:
-        type: AOE_DAMAGE
-        name: '&4Ground Smash'
-        description: ['Đập mạnh xuống đất, hất tung và làm choáng kẻ địch.']
-        unlock-level: 10
-        cooldown: 20
-        energy-cost: 45
-        trigger: SHIFT_RIGHT_CLICK
-        params:
-          radius: 6.0
-          damage: 13.0
-          knockback: 1.4
-          lift: 0.7
-          affect-players: true
-          affect-mobs: true
-          effects:
-            - {type: SLOWNESS, duration: 60, amplifier: 1}
-            - {type: MINING_FATIGUE, duration: 80, amplifier: 1}
-        effects:
-          sounds:
-            smash: {key: entity.iron_golem.attack, volume: 1.0, pitch: 0.6}
-            boom: {key: entity.generic.explode, volume: 1.0, pitch: 0.7, delay: 2}
-          particle: {type: EXPLOSION, count: 3, spread: 1.5, speed: 0}
-          animations:
-            wave: {type: SHOCKWAVE, particle: CRIT, radius: 6.0, duration: 10, count: 40}
-            smoke: {type: SHOCKWAVE, particle: LARGE_SMOKE, radius: 6.0, duration: 10, delay: 3}
-            dome: {type: DOME, particle: CRIT, radius: 3.0, duration: 8, count: 24}
-          impact:
-            particle: {type: EXPLOSION, count: 1, spread: 0.2, speed: 0}
 
   demon:
     display-name: '&c&lDemon'
@@ -382,15 +276,51 @@ races:
     strengths:
       - 'Đòn đánh có cơ hội gây Wither / thiêu cháy đối thủ'
       - 'Miễn nhiễm sát thương lửa & dung nham'
-      - 'Skill Hellfire Burst thiêu đốt diện rộng'
+      - 'Trong Nether: Strength + hồi máu'
+      - 'Ban đêm: nhanh hơn, +10% sát thương'
+      - 'Đang cháy: +30% sát thương'
+      - 'Hạ gục: hồi máu + giáp ảo'
     weaknesses:
-      - 'Nhận thêm 30% sát thương từ Holy/Light (Angel, Holy Nova)'
+      - 'Nhận thêm 30% sát thương từ Holy/Light (tộc Angel)'
     passives:
       on-hit:
         - {type: WITHER, duration: 60, amplifier: 0, chance: 0.15}
         - {type: FIRE, duration: 80, chance: 0.20}
       damage-taken: {FIRE: 0.0, FIRE_TICK: 0.0, LAVA: 0.0, HOT_FLOOR: 0.0}
       weak-to: {HOLY: 1.3}
+    buffs:
+      hellborn:
+        name: '&cSinh ra từ địa ngục'
+        description: ['Trong Nether: Strength I, Regeneration I và hồi +0.3 HP/giây.']
+        condition: IN_NETHER
+        unlock-level: 1
+        effects:
+          - {type: STRENGTH, duration: 40, amplifier: 0}
+          - {type: REGENERATION, duration: 40, amplifier: 0}
+        regen: 0.3
+      night-stalker:
+        name: '&8Kẻ săn đêm'
+        description: ['Ban đêm: Speed I và gây thêm 10% sát thương.']
+        condition: NIGHT
+        unlock-level: 5
+        effects:
+          - {type: SPEED, duration: 40, amplifier: 0}
+        damage-multiplier: 1.1
+      infernal-fury:
+        name: '&6Cuồng nộ địa ngục'
+        description: ['Khi đang cháy: gây thêm 30% sát thương (đã miễn nhiễm sát thương lửa).']
+        condition: ON_FIRE
+        unlock-level: 10
+        damage-multiplier: 1.3
+      soul-harvest:
+        name: '&3Thu hoạch linh hồn'
+        description: ['Hạ gục: hồi 3 HP và nhận giáp ảo.']
+        condition: ALWAYS
+        unlock-level: 15
+        on-kill:
+          heal: 3.0
+          effects:
+            - {type: ABSORPTION, duration: 200, amplifier: 1}
     cosmetic:
       parts:
         wings:
@@ -418,73 +348,7 @@ races:
       particles:
         flames: {type: FLAME, count: 2, spread: 0.3, speed: 0.01, interval: 4, at: BACK, moving-only: true}
         souls: {type: SOUL_FIRE_FLAME, count: 1, spread: 0.2, speed: 0.01, interval: 10, at: BACK}
-    skills:
-      hellfire-burst:
-        type: AOE_DAMAGE
-        name: '&cHellfire Burst'
-        description: ['Địa ngục bùng nổ 3 đợt: sát thương lớn, thiêu cháy và Wither.']
-        unlock-level: 1
-        cooldown: 12
-        energy-cost: 30
-        trigger: RIGHT_CLICK
-        params:
-          radius: 7.5
-          damage: 10.0
-          waves: 3
-          wave-interval: 6
-          fire-ticks: 140
-          knockback: 0.5
-          lift: 0.4
-          affect-players: true
-          affect-mobs: true
-          effects:
-            - {type: WITHER, duration: 100, amplifier: 1}
-        effects:
-          sounds:
-            blaze: {key: entity.blaze.shoot, volume: 1.0, pitch: 0.7}
-            fire: {key: item.firecharge.use, volume: 1.0, pitch: 0.6, delay: 3}
-            ghast: {key: entity.ghast.shoot, volume: 0.8, pitch: 0.8, delay: 7}
-          particle: {type: FLAME, count: 80, spread: 1.6, speed: 0.1}
-          animations:
-            wave1: {type: SHOCKWAVE, particle: FLAME, radius: 7.5, duration: 14, count: 40}
-            wave2: {type: SHOCKWAVE, particle: SOUL_FIRE_FLAME, radius: 7.5, duration: 14, delay: 6, count: 40}
-            wave3: {type: SHOCKWAVE, particle: FLAME, radius: 7.5, duration: 14, delay: 12, count: 40}
-            vortex: {type: VORTEX, particle: SOUL_FIRE_FLAME, radius: 3.0, height: 3.2, duration: 18}
-            pillar: {type: PILLAR, particle: FLAME, radius: 1.2, height: 3.0, duration: 16, count: 14}
-          impact:
-            particle: {type: FLAME, count: 14, spread: 0.4, speed: 0.06}
-            sound: {key: entity.blaze.hurt, volume: 0.6, pitch: 0.8}
-      soul-siphon:
-        type: AOE_DAMAGE
-        name: '&3Soul Siphon'
-        description: ['Hút linh hồn kẻ địch vào tâm: sát thương, thiêu đốt và Wither.']
-        unlock-level: 10
-        cooldown: 18
-        energy-cost: 35
-        trigger: SHIFT_RIGHT_CLICK
-        params:
-          radius: 7.0
-          damage: 8.0
-          waves: 3
-          wave-interval: 6
-          pull: true
-          knockback: 1.0
-          lift: 0.2
-          fire-ticks: 80
-          affect-players: true
-          affect-mobs: true
-          effects:
-            - {type: WITHER, duration: 80, amplifier: 1}
-        effects:
-          sounds:
-            wail: {key: entity.vex.charge, volume: 1.2, pitch: 0.6}
-            soul: {key: particle.soul_escape, volume: 1.5, pitch: 0.8, delay: 3}
-          particle: {type: SOUL_FIRE_FLAME, count: 60, spread: 1.4, speed: 0.08}
-          animations:
-            vortex: {type: VORTEX, particle: SOUL_FIRE_FLAME, radius: 4.0, height: 3.0, duration: 20}
-            wave: {type: SHOCKWAVE, particle: SOUL, radius: 7.0, duration: 14, count: 30}
-          impact:
-            particle: {type: SOUL, count: 8, spread: 0.4, speed: 0.03}
+
   angel:
     display-name: '&e&lAngel'
     icon: FEATHER
@@ -496,8 +360,9 @@ races:
     stats: {health: 20.0, speed: 1.02, strength: 1.0, jump: 0.05, knockback-resistance: 0.0, critical-chance: 0.04}
     growth: {health: 0.2, speed: 0.0004, strength: 0.004}
     strengths:
-      - 'Hồi máu cho bản thân & đồng đội xung quanh'
-      - 'Chống rơi trong thời gian ngắn'
+      - 'Ban ngày ngoài trời: hồi +0.4 HP/giây và Speed I'
+      - 'Độ cao lớn (Y >= 100): rơi chậm'
+      - 'Máu đầy: kháng sát thương'
       - 'Kháng Poison, Wither, Blindness, Nausea'
       - 'Sát thương Holy gây thêm sát thương lên Demon'
     weaknesses:
@@ -506,6 +371,31 @@ races:
       melee-damage-multiplier: 0.85
       immune-effects: [POISON, WITHER, BLINDNESS, NAUSEA]
       damage-tags: [HOLY]
+    buffs:
+      divine-grace:
+        name: '&eÂn sủng ánh sáng'
+        description: ['Ban ngày ngoài trời: Speed I và hồi +0.4 HP/giây.']
+        condition: DAY
+        unlock-level: 1
+        effects:
+          - {type: SPEED, duration: 40, amplifier: 0}
+        regen: 0.4
+      featherfall:
+        name: '&fĐôi cánh nhẹ tênh'
+        description: ['Ở độ cao Y >= 100: rơi chậm như lông vũ.']
+        condition: HIGH_ALTITUDE
+        threshold: 100
+        unlock-level: 1
+        effects:
+          - {type: SLOW_FALLING, duration: 40, amplifier: 0}
+      guardian-aura:
+        name: '&bHào quang hộ vệ'
+        description: ['Máu đầy (từ 90%): Resistance I.']
+        condition: FULL_HEALTH
+        threshold: 0.9
+        unlock-level: 10
+        effects:
+          - {type: RESISTANCE, duration: 40, amplifier: 0}
     cosmetic:
       parts:
         wings:
@@ -529,91 +419,6 @@ races:
           pitch: 90
       particles:
         glow: {type: END_ROD, count: 1, spread: 0.4, speed: 0.01, interval: 12, at: BACK}
-    skills:
-      divine-heal:
-        type: HEAL
-        name: '&eDivine Heal'
-        description: ['Ánh sáng chữa lành diện rộng, giải trừ hiệu ứng xấu và ban giáp ảo.']
-        unlock-level: 1
-        cooldown: 25
-        energy-cost: 35
-        trigger: RIGHT_CLICK
-        params:
-          amount: 12.0
-          radius: 8.0
-          cleanse: [POISON, WITHER, WEAKNESS, SLOWNESS, BLINDNESS]
-          effects:
-            - {type: REGENERATION, duration: 120, amplifier: 1}
-            - {type: ABSORPTION, duration: 200, amplifier: 1}
-        effects:
-          sounds:
-            beacon: {key: block.beacon.activate, volume: 1.0, pitch: 1.6}
-            chime: {key: block.amethyst_block.chime, volume: 1.0, pitch: 1.2, delay: 4}
-            levelup: {key: entity.player.levelup, volume: 0.8, pitch: 1.0, delay: 8}
-          particle: {type: HEART, count: 14, spread: 0.8, speed: 0}
-          animations:
-            spiral: {type: SPIRAL, particle: END_ROD, radius: 1.4, height: 3.0, duration: 28}
-            pillar: {type: PILLAR, particle: END_ROD, radius: 1.0, height: 3.5, duration: 24, count: 12}
-            wave: {type: SHOCKWAVE, particle: HAPPY_VILLAGER, radius: 8.0, duration: 16}
-            dome: {type: DOME, particle: TOTEM_OF_UNDYING, radius: 2.5, duration: 14, count: 24, delay: 4}
-          impact:
-            particle: {type: HEART, count: 5, spread: 0.5, speed: 0}
-      featherfall:
-        type: NO_FALL
-        name: '&fFeatherfall'
-        description: ['Lướt nhẹ như lông vũ: miễn sát thương rơi và tăng tốc.']
-        unlock-level: 5
-        cooldown: 30
-        energy-cost: 20
-        trigger: SHIFT_RIGHT_CLICK
-        params:
-          duration-ticks: 200
-          slow-falling: true
-          effects:
-            - {type: SPEED, duration: 120, amplifier: 1}
-        effects:
-          sounds:
-            flap: {key: entity.phantom.flap, volume: 1.0, pitch: 1.8}
-            chime: {key: block.amethyst_block.chime, volume: 0.8, pitch: 1.8, delay: 3}
-          particle: {type: CLOUD, count: 30, spread: 0.7, speed: 0.03}
-          animations:
-            wave: {type: SHOCKWAVE, particle: END_ROD, radius: 2.5, duration: 10}
-            feathers: {type: VORTEX, particle: CLOUD, radius: 1.8, height: 2.4, duration: 20}
-      holy-nova:
-        type: AOE_DAMAGE
-        name: '&6Holy Nova'
-        description: ['Phán xét thần thánh 2 đợt: sát thương Holy + sét. Gây thêm sát thương lên Demon.']
-        unlock-level: 15
-        cooldown: 30
-        energy-cost: 50
-        trigger: COMMAND
-        tags: [HOLY]
-        params:
-          radius: 8.0
-          damage: 12.0
-          waves: 2
-          wave-interval: 8
-          knockback: 0.5
-          lift: 0.5
-          lightning: true
-          affect-players: true
-          affect-mobs: true
-          effects:
-            - {type: GLOWING, duration: 120, amplifier: 0}
-            - {type: SLOWNESS, duration: 40, amplifier: 1}
-        effects:
-          sounds:
-            power: {key: block.beacon.power_select, volume: 1.0, pitch: 1.2}
-            thunder: {key: entity.lightning_bolt.thunder, volume: 0.6, pitch: 1.5, delay: 3}
-            levelup: {key: entity.player.levelup, volume: 0.9, pitch: 0.7, delay: 6}
-          particle: {type: END_ROD, count: 80, spread: 1.6, speed: 0.15}
-          animations:
-            wave1: {type: SHOCKWAVE, particle: END_ROD, radius: 8.0, duration: 14, count: 44}
-            wave2: {type: SHOCKWAVE, particle: TOTEM_OF_UNDYING, radius: 8.0, duration: 14, delay: 8, count: 30}
-            pillar: {type: PILLAR, particle: END_ROD, radius: 1.5, height: 5.0, duration: 20, count: 14}
-            dome: {type: DOME, particle: END_ROD, radius: 8.0, duration: 16, count: 40}
-          impact:
-            particle: {type: END_ROD, count: 14, spread: 0.4, speed: 0.12}
 
   dragon:
     display-name: '&5&lDragon'
@@ -628,11 +433,14 @@ races:
     strengths:
       - 'Máu +3 tim so với Human'
       - 'Giảm 50% sát thương rơi, miễn nhiễm Dragon Breath'
-      - 'Hơi thở rồng: sát thương + thiêu đốt diện rộng 4 đợt'
       - 'Đòn đánh có cơ hội thiêu cháy đối thủ'
+      - 'Độ cao lớn (Y >= 100): +20% sát thương, rơi chậm'
+      - 'Trong The End: Strength II, hồi máu, giảm 15% sát thương nhận'
+      - 'Hạ gục: hồi máu + Strength'
       - 'Cánh rồng Ender sau lưng'
     weaknesses:
       - 'Nhận thêm 25% sát thương từ Water (tộc Fish)'
+      - 'Trời mưa: nhận thêm 15% sát thương và bị chậm'
       - 'Di chuyển nặng nề (-3% tốc độ)'
     passives:
       damage-taken: {FALL: 0.5, DRAGON_BREATH: 0.0}
@@ -640,6 +448,42 @@ races:
       damage-tags: [FIRE]
       on-hit:
         - {type: FIRE, duration: 60, chance: 0.15}
+    buffs:
+      dragon-blood:
+        name: '&5Huyết rồng'
+        description: ['Hạ gục: hồi 2 HP và Strength I trong 6 giây.']
+        condition: ALWAYS
+        unlock-level: 1
+        on-kill:
+          heal: 2.0
+          effects:
+            - {type: STRENGTH, duration: 120, amplifier: 0}
+      sky-lord:
+        name: '&dChúa tể bầu trời'
+        description: ['Ở độ cao Y >= 100: gây thêm 20% sát thương và rơi chậm.']
+        condition: HIGH_ALTITUDE
+        threshold: 100
+        unlock-level: 5
+        effects:
+          - {type: SLOW_FALLING, duration: 40, amplifier: 0}
+        damage-multiplier: 1.2
+      end-power:
+        name: '&5Sức mạnh của The End'
+        description: ['Trong The End: Strength II, Regeneration I, giảm 15% sát thương nhận.']
+        condition: IN_END
+        unlock-level: 1
+        effects:
+          - {type: STRENGTH, duration: 40, amplifier: 1}
+          - {type: REGENERATION, duration: 40, amplifier: 0}
+        defense-multiplier: 0.85
+      rain-weakness:
+        name: '&8Nhược điểm: mưa'
+        description: ['Trời mưa: nhận thêm 15% sát thương và bị chậm.']
+        condition: IN_RAIN
+        unlock-level: 1
+        effects:
+          - {type: SLOWNESS, duration: 40, amplifier: 0}
+        defense-multiplier: 1.15
     cosmetic:
       parts:
         wings:
@@ -666,97 +510,6 @@ races:
           billboard: CENTER
       particles:
         ender: {type: PORTAL, count: 6, spread: 0.5, speed: 0.4, interval: 6, at: BACK}
-    skills:
-      ender-breath:
-        type: AOE_DAMAGE
-        name: '&5Ender Breath'
-        description: ['Hơi thở rồng 4 đợt: sát thương lớn, thiêu đốt, làm yếu và làm chậm.']
-        unlock-level: 1
-        cooldown: 14
-        energy-cost: 35
-        trigger: RIGHT_CLICK
-        tags: [FIRE]
-        params:
-          radius: 8.0
-          damage: 12.0
-          waves: 4
-          wave-interval: 5
-          fire-ticks: 100
-          knockback: 0.6
-          lift: 0.4
-          affect-players: true
-          affect-mobs: true
-          effects:
-            - {type: WEAKNESS, duration: 120, amplifier: 1}
-            - {type: SLOWNESS, duration: 60, amplifier: 0}
-        effects:
-          sounds:
-            growl: {key: entity.ender_dragon.growl, volume: 1.0, pitch: 0.9}
-            breath: {key: entity.ender_dragon.shoot, volume: 0.8, pitch: 1.0, delay: 4}
-            flap: {key: entity.ender_dragon.flap, volume: 0.8, pitch: 1.0, delay: 9}
-          particle: {type: DRAGON_BREATH, count: 90, spread: 1.8, speed: 0.06}
-          animations:
-            dome: {type: DOME, particle: DRAGON_BREATH, radius: 8.0, duration: 16, count: 50}
-            wave1: {type: SHOCKWAVE, particle: DRAGON_BREATH, radius: 8.0, duration: 12, count: 40}
-            wave2: {type: SHOCKWAVE, particle: PORTAL, radius: 8.0, duration: 12, delay: 6, count: 40}
-            vortex: {type: VORTEX, particle: PORTAL, radius: 3.5, height: 3.5, duration: 20}
-          impact:
-            particle: {type: DRAGON_BREATH, count: 12, spread: 0.4, speed: 0.04}
-            sound: {key: entity.ender_dragon.hurt, volume: 0.5, pitch: 1.2}
-      dragon-roar:
-        type: AOE_DAMAGE
-        name: '&dDragon Roar'
-        description: ['Tiếng gầm của rồng: hất văng kẻ địch, làm yếu và làm chậm.']
-        unlock-level: 1
-        cooldown: 16
-        energy-cost: 30
-        trigger: SHIFT_RIGHT_CLICK
-        tags: [FIRE]
-        params:
-          radius: 9.0
-          damage: 7.0
-          waves: 2
-          wave-interval: 8
-          knockback: 2.0
-          lift: 0.6
-          affect-players: true
-          affect-mobs: true
-          effects:
-            - {type: WEAKNESS, duration: 100, amplifier: 1}
-            - {type: SLOWNESS, duration: 40, amplifier: 0}
-        effects:
-          sounds:
-            roar: {key: entity.ender_dragon.growl, volume: 1.5, pitch: 0.8}
-            flap: {key: entity.ender_dragon.flap, volume: 1.0, pitch: 1.0, delay: 5}
-          particle: {type: PORTAL, count: 80, spread: 1.6, speed: 0.6}
-          animations:
-            dome: {type: DOME, particle: DRAGON_BREATH, radius: 9.0, duration: 14, count: 40}
-            wave: {type: SHOCKWAVE, particle: PORTAL, radius: 9.0, duration: 12, count: 40}
-          impact:
-            particle: {type: PORTAL, count: 14, spread: 0.4, speed: 0.4}
-            sound: {key: entity.enderman.teleport, volume: 0.7, pitch: 1.0}
-      dragon-flight:
-        type: NO_FALL
-        name: '&5Dragon Flight'
-        description: ['Lướt trên không như rồng: miễn sát thương rơi, tăng tốc và nhảy cao.']
-        unlock-level: 10
-        cooldown: 40
-        energy-cost: 30
-        trigger: COMMAND
-        params:
-          duration-ticks: 240
-          slow-falling: true
-          effects:
-            - {type: SPEED, duration: 160, amplifier: 1}
-            - {type: JUMP_BOOST, duration: 240, amplifier: 1}
-        effects:
-          sounds:
-            flap: {key: entity.ender_dragon.flap, volume: 0.9, pitch: 1.3}
-            growl: {key: entity.ender_dragon.ambient, volume: 0.6, pitch: 1.0, delay: 5}
-          particle: {type: END_ROD, count: 30, spread: 0.8, speed: 0.03}
-          animations:
-            vortex: {type: VORTEX, particle: PORTAL, radius: 2.5, height: 3.0, duration: 24}
-            wave: {type: SHOCKWAVE, particle: DRAGON_BREATH, radius: 3.5, duration: 12}
 
   fish:
     display-name: '&b&lFish'
@@ -769,22 +522,48 @@ races:
     stats: {health: 18.0, speed: 0.95, strength: 1.0, jump: 0.0, knockback-resistance: 0.0, critical-chance: 0.04}
     growth: {health: 0.2, speed: 0.0004, strength: 0.005}
     strengths:
-      - 'Dưới nước: thở được, bơi nhanh, nhìn rõ'
-      - 'Sát thương +20% khi ở dưới nước'
+      - 'Dưới nước: thở được, bơi nhanh, nhìn rõ, +20% sát thương, hồi máu'
+      - 'Trời mưa: nhanh hơn, hồi máu, +10% sát thương'
       - 'Miễn nhiễm chết đuối'
+      - 'Khi bị đánh có 20% cơ hội hồi phục'
       - 'Sát thương Water gây thêm sát thương lên Dragon'
     weaknesses:
       - 'Chậm hơn trên cạn (-5% tốc độ), máu thấp hơn Human'
       - 'Nhận thêm 25% sát thương từ Venom (tộc Snake)'
     passives:
-      water-effects:
-        - {type: WATER_BREATHING, duration: 100, amplifier: 0}
-        - {type: DOLPHINS_GRACE, duration: 100, amplifier: 0}
-        - {type: NIGHT_VISION, duration: 260, amplifier: 0}
-      water-damage-multiplier: 1.2
       damage-taken: {DROWNING: 0.0}
       damage-tags: [WATER]
       weak-to: {VENOM: 1.25}
+    buffs:
+      sea-blessing:
+        name: '&bPhước lành đại dương'
+        description: ['Dưới nước: thở được, bơi nhanh, nhìn rõ, +20% sát thương, hồi +0.3 HP/giây.']
+        condition: IN_WATER
+        unlock-level: 1
+        effects:
+          - {type: WATER_BREATHING, duration: 40, amplifier: 0}
+          - {type: DOLPHINS_GRACE, duration: 40, amplifier: 0}
+          - {type: NIGHT_VISION, duration: 260, amplifier: 0}
+        damage-multiplier: 1.2
+        regen: 0.3
+      rain-dancer:
+        name: '&3Vũ công dưới mưa'
+        description: ['Trời mưa: Speed I, +10% sát thương, hồi +0.3 HP/giây.']
+        condition: IN_RAIN
+        unlock-level: 5
+        effects:
+          - {type: SPEED, duration: 40, amplifier: 0}
+        damage-multiplier: 1.1
+        regen: 0.3
+      tide-surge:
+        name: '&9Thủy triều dâng'
+        description: ['Khi bị đánh có 20% cơ hội nhận Regeneration II trong 4 giây.']
+        condition: ALWAYS
+        unlock-level: 10
+        on-hurt:
+          chance: 0.2
+          effects:
+            - {type: REGENERATION, duration: 80, amplifier: 1}
     cosmetic:
       parts:
         fins:
@@ -832,97 +611,6 @@ races:
       particles:
         bubbles: {type: BUBBLE_POP, count: 2, spread: 0.4, speed: 0.01, interval: 6, at: BACK}
         splash: {type: SPLASH, count: 3, spread: 0.3, speed: 0.01, interval: 8, at: BACK, moving-only: true}
-    skills:
-      tidal-wave:
-        type: AOE_DAMAGE
-        name: '&bTidal Wave'
-        description: ['Sóng thần 3 đợt: sát thương Water, đẩy lùi và làm chậm.']
-        unlock-level: 1
-        cooldown: 14
-        energy-cost: 30
-        trigger: RIGHT_CLICK
-        tags: [WATER]
-        params:
-          radius: 7.0
-          damage: 9.0
-          waves: 3
-          wave-interval: 6
-          knockback: 1.6
-          lift: 0.5
-          affect-players: true
-          affect-mobs: true
-          effects:
-            - {type: SLOWNESS, duration: 80, amplifier: 1}
-        effects:
-          sounds:
-            splash: {key: entity.dolphin.splash, volume: 1.0, pitch: 0.8}
-            wave: {key: entity.generic.splash, volume: 1.0, pitch: 0.7, delay: 3}
-            crash: {key: entity.player.splash.high_speed, volume: 1.0, pitch: 0.8, delay: 8}
-          particle: {type: SPLASH, count: 100, spread: 2.2, speed: 0.15}
-          animations:
-            wave1: {type: SHOCKWAVE, particle: SPLASH, radius: 7.0, duration: 12, count: 44}
-            wave2: {type: SHOCKWAVE, particle: BUBBLE_POP, radius: 7.0, duration: 12, delay: 6, count: 36}
-            wave3: {type: SHOCKWAVE, particle: SPLASH, radius: 7.0, duration: 12, delay: 12, count: 44}
-            rain: {type: VORTEX, particle: FALLING_WATER, radius: 3.0, height: 3.0, duration: 18}
-          impact:
-            particle: {type: SPLASH, count: 16, spread: 0.4, speed: 0.1}
-      whirlpool:
-        type: AOE_DAMAGE
-        name: '&3Whirlpool'
-        description: ['Xoáy nước 4 đợt: kéo kẻ địch vào tâm, sát thương Water và làm chậm.']
-        unlock-level: 1
-        cooldown: 15
-        energy-cost: 30
-        trigger: SHIFT_RIGHT_CLICK
-        tags: [WATER]
-        params:
-          radius: 6.5
-          damage: 5.0
-          waves: 4
-          wave-interval: 5
-          pull: true
-          knockback: 0.8
-          lift: 0.1
-          affect-players: true
-          affect-mobs: true
-          effects:
-            - {type: SLOWNESS, duration: 60, amplifier: 2}
-        effects:
-          sounds:
-            splash: {key: entity.generic.splash, volume: 1.0, pitch: 0.7}
-            whirl: {key: block.bubble_column.whirlpool_ambient, volume: 1.5, pitch: 1.0, delay: 3}
-          particle: {type: SPLASH, count: 70, spread: 1.6, speed: 0.1}
-          animations:
-            vortex: {type: VORTEX, particle: BUBBLE_POP, radius: 4.5, height: 3.0, duration: 20}
-            wave: {type: SHOCKWAVE, particle: SPLASH, radius: 6.5, duration: 12, count: 36}
-          impact:
-            particle: {type: SPLASH, count: 12, spread: 0.4, speed: 0.1}
-      aqua-heal:
-        type: HEAL
-        name: '&9Aqua Heal'
-        description: ['Dòng nước chữa lành: hồi máu mạnh và ban hồi phục cho đồng đội.']
-        unlock-level: 8
-        cooldown: 30
-        energy-cost: 35
-        trigger: COMMAND
-        params:
-          amount: 10.0
-          radius: 7.0
-          cleanse: [POISON, WITHER, WEAKNESS]
-          effects:
-            - {type: REGENERATION, duration: 120, amplifier: 1}
-            - {type: DOLPHINS_GRACE, duration: 200, amplifier: 0}
-        effects:
-          sounds:
-            play: {key: entity.dolphin.play, volume: 1.0, pitch: 1.2}
-            bubble: {key: block.bubble_column.upwards_ambient, volume: 1.0, pitch: 1.0, delay: 3}
-          particle: {type: HEART, count: 10, spread: 0.7, speed: 0}
-          animations:
-            spiral: {type: SPIRAL, particle: BUBBLE_POP, radius: 1.3, height: 2.6, duration: 24}
-            wave: {type: SHOCKWAVE, particle: SPLASH, radius: 7.0, duration: 14}
-            pillar: {type: PILLAR, particle: DRIPPING_WATER, radius: 1.0, height: 3.0, duration: 20}
-          impact:
-            particle: {type: HEART, count: 4, spread: 0.5, speed: 0}
 
   snake:
     display-name: '&a&lSnake'
@@ -936,9 +624,12 @@ races:
     growth: {health: 0.2, speed: 0.0006, strength: 0.005}
     strengths:
       - 'Tốc độ di chuyển +8%, tỉ lệ chí mạng cao'
-      - 'Đòn đánh có 35% cơ hội gây Poison'
+      - '35% cơ hội gây Poison khi đánh trúng'
       - 'Miễn nhiễm Poison'
-      - 'Skill Shed Skin: tàng hình + tăng tốc'
+      - 'Ban đêm: nhanh, nhìn rõ, +20% sát thương'
+      - 'Ngồi xuống: tàng hình'
+      - 'Hạ gục: hồi máu + tăng tốc'
+      - 'Máu dưới 30%: tăng tốc mạnh, giảm 15% sát thương nhận'
     weaknesses:
       - 'Máu thấp hơn Human (-1 tim)'
       - 'Nhận thêm 25% sát thương từ Fire (tộc Dragon)'
@@ -948,6 +639,41 @@ races:
       immune-effects: [POISON]
       damage-tags: [VENOM]
       weak-to: {FIRE: 1.25}
+    buffs:
+      night-hunter:
+        name: '&aThợ săn đêm'
+        description: ['Ban đêm: Speed II, nhìn xuyên đêm, +20% sát thương.']
+        condition: NIGHT
+        unlock-level: 1
+        effects:
+          - {type: SPEED, duration: 40, amplifier: 1}
+          - {type: NIGHT_VISION, duration: 260, amplifier: 0}
+        damage-multiplier: 1.2
+      venom-glands:
+        name: '&2Tuyến nọc độc'
+        description: ['Hạ gục: hồi 1.5 HP và Speed II trong 4 giây.']
+        condition: ALWAYS
+        unlock-level: 5
+        on-kill:
+          heal: 1.5
+          effects:
+            - {type: SPEED, duration: 80, amplifier: 1}
+      shadow-crawl:
+        name: '&8Bò trong bóng tối'
+        description: ['Khi ngồi xuống (Shift): tàng hình.']
+        condition: SNEAKING
+        unlock-level: 8
+        effects:
+          - {type: INVISIBILITY, duration: 40, amplifier: 0}
+      coil-reflex:
+        name: '&aPhản xạ cuộn mình'
+        description: ['Máu dưới 30%: Speed III và giảm 15% sát thương nhận.']
+        condition: LOW_HEALTH
+        threshold: 0.3
+        unlock-level: 12
+        effects:
+          - {type: SPEED, duration: 40, amplifier: 2}
+        defense-multiplier: 0.85
     cosmetic:
       parts:
         tail:
@@ -964,91 +690,3 @@ races:
           billboard: CENTER
       particles:
         venom: {type: ITEM_SLIME, count: 1, spread: 0.1, speed: 0, interval: 6, at: TAIL_END, moving-only: true}
-    skills:
-      venom-spit:
-        type: AOE_DAMAGE
-        name: '&aVenom Spit'
-        description: ['Nọc độc 3 đợt: Poison mạnh, làm chậm và mệt mỏi kẻ địch.']
-        unlock-level: 1
-        cooldown: 12
-        energy-cost: 30
-        trigger: RIGHT_CLICK
-        tags: [VENOM]
-        params:
-          radius: 6.0
-          damage: 7.0
-          waves: 3
-          wave-interval: 8
-          knockback: 0.2
-          lift: 0.2
-          affect-players: true
-          affect-mobs: true
-          effects:
-            - {type: POISON, duration: 160, amplifier: 2}
-            - {type: SLOWNESS, duration: 80, amplifier: 1}
-            - {type: MINING_FATIGUE, duration: 80, amplifier: 0}
-        effects:
-          sounds:
-            hiss: {key: entity.cat.hiss, volume: 1.0, pitch: 0.8}
-            squish: {key: entity.slime.squish, volume: 1.0, pitch: 0.7, delay: 3}
-            spit: {key: entity.llama.spit, volume: 1.0, pitch: 0.8, delay: 7}
-          particle: {type: ITEM_SLIME, count: 70, spread: 1.4, speed: 0.08}
-          animations:
-            wave1: {type: SHOCKWAVE, particle: ITEM_SLIME, radius: 6.0, duration: 12, count: 36}
-            wave2: {type: SHOCKWAVE, particle: SNEEZE, radius: 6.0, duration: 12, delay: 8, count: 30}
-            vortex: {type: VORTEX, particle: SNEEZE, radius: 2.5, height: 2.8, duration: 18}
-          impact:
-            particle: {type: ITEM_SLIME, count: 12, spread: 0.4, speed: 0.05}
-      shed-skin:
-        type: SELF_BUFF
-        name: '&2Shed Skin'
-        description: ['Lột da: tàng hình, chạy rất nhanh và tăng sức mạnh.']
-        unlock-level: 1
-        cooldown: 45
-        energy-cost: 40
-        trigger: SHIFT_RIGHT_CLICK
-        params:
-          effects:
-            - {type: INVISIBILITY, duration: 160, amplifier: 0}
-            - {type: SPEED, duration: 160, amplifier: 2}
-            - {type: STRENGTH, duration: 160, amplifier: 1}
-        effects:
-          sounds:
-            squish: {key: entity.slime.squish, volume: 1.0, pitch: 0.7}
-            hiss: {key: entity.cat.hiss, volume: 0.8, pitch: 1.4, delay: 3}
-          particle: {type: ITEM_SLIME, count: 50, spread: 0.7, speed: 0.08}
-          animations:
-            vortex: {type: VORTEX, particle: ITEM_SLIME, radius: 1.3, height: 2.2, duration: 18}
-            wave: {type: SHOCKWAVE, particle: SNEEZE, radius: 3.0, duration: 8}
-      constrict:
-        type: AOE_DAMAGE
-        name: '&aConstrict'
-        description: ['Siết chặt kẻ địch quanh bạn: kéo vào tâm, Poison và làm chậm nặng.']
-        unlock-level: 5
-        cooldown: 14
-        energy-cost: 28
-        trigger: COMMAND
-        tags: [VENOM]
-        params:
-          radius: 4.5
-          damage: 6.0
-          waves: 3
-          wave-interval: 6
-          pull: true
-          knockback: 0.9
-          lift: 0.0
-          affect-players: true
-          affect-mobs: true
-          effects:
-            - {type: SLOWNESS, duration: 80, amplifier: 3}
-            - {type: POISON, duration: 120, amplifier: 1}
-        effects:
-          sounds:
-            hiss: {key: entity.cat.hiss, volume: 1.0, pitch: 1.2}
-            squeeze: {key: entity.slime.squish, volume: 1.0, pitch: 0.6, delay: 3}
-          particle: {type: ITEM_SLIME, count: 40, spread: 1.0, speed: 0.06}
-          animations:
-            coil: {type: SPIRAL, particle: ITEM_SLIME, radius: 2.0, height: 2.4, duration: 18, count: 3}
-            wave: {type: SHOCKWAVE, particle: SNEEZE, radius: 4.5, duration: 10, count: 26}
-          impact:
-            particle: {type: ITEM_SLIME, count: 10, spread: 0.4, speed: 0.05}

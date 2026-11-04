@@ -18,7 +18,7 @@ permissions:
     description: Dùng các lệnh race cơ bản
     default: true
   astraxrace.bypass:
-    description: Bỏ qua cooldown/năng lượng skill và giới hạn đổi race
+    description: Bỏ qua giới hạn đổi race và bước xác nhận roll
     default: op
   astraxrace.admin:
     description: Quản trị AstraXRace

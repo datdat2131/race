@@ -28,12 +28,12 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.EquipmentSlot;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 
+import java.util.Locale;
 import java.util.Set;
 
-/** Toàn bộ sự kiện của AstraXRace: dữ liệu, chiến đấu, EXP, skill item, GUI. */
+/** Sự kiện của AstraXRace: dữ liệu người chơi, chiến đấu (nội tại + buff), EXP, vé roll, GUI. */
 public final class RaceListener implements Listener {
 
     private final AstraXRace plugin;
@@ -44,10 +44,6 @@ public final class RaceListener implements Listener {
 
     private RaceManager races() {
         return plugin.races();
-    }
-
-    private SkillManager skills() {
-        return plugin.skills();
     }
 
     // ---------------- Dữ liệu người chơi ----------------
@@ -86,18 +82,13 @@ public final class RaceListener implements Listener {
         Bukkit.getScheduler().runTask(plugin, () -> {
             if (!p.isOnline()) return;
             races().applyAttributes(p);
-            skills().initEnergy(p);
             plugin.cosmetics().refresh(p);
-            if (plugin.configs().config().getBoolean("skill-item.give-on-respawn", true) && races().raceOf(p) != null) {
-                skills().giveSkillItem(p, false);
-            }
         });
     }
 
     @EventHandler
     public void onDeath(PlayerDeathEvent e) {
         plugin.cosmetics().remove(e.getEntity());
-        e.getDrops().removeIf(skills()::isSkillItem);
     }
 
     @EventHandler
@@ -105,18 +96,10 @@ public final class RaceListener implements Listener {
         plugin.cosmetics().refresh(e.getPlayer());
     }
 
-    // ---------------- Chiến đấu ----------------
+    // ---------------- Chiến đấu: nội tại + buff ----------------
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onDamage(EntityDamageEvent e) {
         Entity victim = e.getEntity();
-
-        if (e.getCause() == EntityDamageEvent.DamageCause.FALL
-                && victim instanceof Player vp && skills().hasNoFall(vp.getUniqueId())) {
-            e.setCancelled(true);
-            return;
-        }
-        if (skills().isSkillDamage()) return;   // sát thương skill đã tự tính hệ số
-
         double mult = 1.0;
         Set<String> tags = Set.of();
         Player attacker = null;
@@ -144,12 +127,20 @@ public final class RaceListener implements Listener {
         }
         if (mult != 1.0) e.setDamage(e.getDamage() * mult);
 
-        // Hiệu ứng khi đánh trúng (Wither/Fire của Demon...)
+        // Hiệu ứng khi đánh trúng (nội tại on-hit)
         if (melee && attacker != null && victim instanceof LivingEntity target && !victim.equals(attacker)) {
             Race ar = races().raceOf(attacker);
             if (ar != null) {
                 for (EffectSpec spec : ar.getOnHit()) spec.apply(target);
             }
+        }
+    }
+
+    /** Buff "khi bị đánh" – xét sau cùng, chỉ khi sát thương thực sự được gây ra. */
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onHurt(EntityDamageEvent e) {
+        if (e.getEntity() instanceof Player p && e.getFinalDamage() > 0) {
+            plugin.buffs().onHurt(p);
         }
     }
 
@@ -163,11 +154,11 @@ public final class RaceListener implements Listener {
         if (a != EntityPotionEffectEvent.Action.ADDED && a != EntityPotionEffectEvent.Action.CHANGED) return;
         Race r = races().raceOf(p);
         if (r == null || r.getImmuneEffects().isEmpty()) return;
-        String name = added.getType().getKey().getKey().toUpperCase(java.util.Locale.ROOT);
+        String name = added.getType().getKey().getKey().toUpperCase(Locale.ROOT);
         if (r.getImmuneEffects().contains(name)) e.setCancelled(true);
     }
 
-    // ---------------- EXP ----------------
+    // ---------------- EXP + buff khi hạ gục ----------------
     @EventHandler(ignoreCancelled = true)
     public void onKill(EntityDeathEvent e) {
         LivingEntity dead = e.getEntity();
@@ -184,6 +175,7 @@ public final class RaceListener implements Listener {
         } else {
             return;
         }
+        plugin.buffs().onKill(killer);
         if (amount <= 0) return;
         races().addExp(killer, amount, true);
         if (c.getBoolean("exp.show-actionbar", true)) {
@@ -200,35 +192,16 @@ public final class RaceListener implements Listener {
         e.setAmount((int) Math.ceil(e.getAmount() * (1.0 + r.getVanillaExpBonus())));
     }
 
-    // ---------------- Kích hoạt skill bằng vật phẩm ----------------
+    // ---------------- Vé roll tộc ----------------
     @EventHandler
     public void onInteract(PlayerInteractEvent e) {
         if (e.getHand() != EquipmentSlot.HAND) return;
         Action a = e.getAction();
         if (a != Action.RIGHT_CLICK_AIR && a != Action.RIGHT_CLICK_BLOCK) return;
-
-        Player p = e.getPlayer();
-        ItemStack item = e.getItem();
-        if (plugin.rolls().isTicket(item)) {
+        if (plugin.rolls().isTicket(e.getItem())) {
             e.setCancelled(true);
-            plugin.rolls().use(p);
-            return;
+            plugin.rolls().use(e.getPlayer());
         }
-        boolean tagged = skills().isSkillItem(item);
-        boolean requireItem = plugin.configs().config().getBoolean("skill-item.require-item", true);
-        if (requireItem && !tagged) return;
-        if (!p.hasPermission("astraxrace.use")) return;
-        if (tagged) e.setCancelled(true);
-
-        PlayerRaceData d = races().data(p);
-        Race r = races().raceOf(d);
-        if (d == null || r == null) {
-            if (tagged) plugin.configs().send(p, "no-race");
-            return;
-        }
-        String trigger = p.isSneaking() ? SkillManager.TRIGGER_SHIFT : SkillManager.TRIGGER_RIGHT;
-        Skill s = skills().findByTrigger(r, d.getLevel(), trigger);
-        if (s != null) skills().castAndNotify(p, s);
     }
 
     // ---------------- GUI ----------------
