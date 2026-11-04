@@ -67,6 +67,16 @@
                     <release>21</release>
                     <excludes>
                         <exclude>target/**</exclude>
+                        <!-- Bản cũ có skill: bỏ qua các file còn sót trong repo (nếu chưa xóa) -->
+                        <exclude>Skill.java</exclude>
+                        <exclude>SkillManager.java</exclude>
+                        <exclude>SkillEffects.java</exclude>
+                        <exclude>CooldownManager.java</exclude>
+                        <exclude>AoeDamageSkill.java</exclude>
+                        <exclude>DashSkill.java</exclude>
+                        <exclude>HealSkill.java</exclude>
+                        <exclude>NoFallSkill.java</exclude>
+                        <exclude>SelfBuffSkill.java</exclude>
                     </excludes>
                 </configuration>
             </plugin>
