@@ -65,9 +65,26 @@
                 <version>3.13.0</version>
                 <configuration>
                     <release>21</release>
-                    <excludes>
-                        <exclude>target/**</exclude>
-                    </excludes>
+                    <!-- Chỉ biên dịch đúng các file của bản hiện tại (bỏ qua file skill cũ còn sót) -->
+                    <includes>
+                        <include>AstraXRace.java</include>
+                        <include>BuffDef.java</include>
+                        <include>BuffManager.java</include>
+                        <include>CommandManager.java</include>
+                        <include>ConfigManager.java</include>
+                        <include>CosmeticDef.java</include>
+                        <include>CosmeticManager.java</include>
+                        <include>EffectSpec.java</include>
+                        <include>GUIManager.java</include>
+                        <include>PlayerRaceData.java</include>
+                        <include>Race.java</include>
+                        <include>RaceGuiHolder.java</include>
+                        <include>RaceListener.java</include>
+                        <include>RaceManager.java</include>
+                        <include>RacePlaceholders.java</include>
+                        <include>RollManager.java</include>
+                        <include>StorageManager.java</include>
+                    </includes>
                 </configuration>
             </plugin>
         </plugins>
