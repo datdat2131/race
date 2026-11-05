@@ -171,6 +171,7 @@ cosmetic:
 | Khóa | Áp dụng | Ý nghĩa |
 |---|---|---|
 | `type` | tất cả | `FIXED`, `FOLLOWER`, `TAIL` |
+| `span`, `fingers`, `angle`, `flap`, `bone`, `membrane`, `tip` | WINGS | **Cánh vẽ bằng particle** (xương cánh + các ngón + màng, vỗ nhẹ): `span` = sải cánh mỗi bên (block, mặc định 1.3), `fingers` = số ngón (2-6), `angle` = góc nâng cánh (độ), `bone`/`membrane`/`tip` = particle (`DUST` có `color`/`size`, hoặc `END_ROD`...) |
 | `item`, `item-model`, `custom-model-data` | tất cả | Vật phẩm hiển thị; 2 khóa sau dùng cho resource pack |
 | `scale`, `end-scale` | tất cả | Kích thước (`end-scale` = đốt cuối của TAIL) |
 | `side`, `up`, `back` | tất cả | Vị trí tương đối; `back` = khoảng cách lùi ra sau lưng |
@@ -179,7 +180,7 @@ cosmetic:
 | `segments`, `spacing`, `wiggle`, `end-item` | TAIL | Số đốt, khoảng cách, độ uốn lượn, vật phẩm đốt cuối |
 | `billboard`, `owner-visible` | tất cả | Hướng mặt; `false` = chính chủ không nhìn thấy |
 
-Bật/tắt toàn cục và chỉnh hiệu năng ở mục `cosmetic` trong `config.yml`. Mặc định dùng icon vật phẩm 2D; muốn cánh 3D dùng resource pack (`item-model` hoặc `custom-model-data`).
+Cánh rồng dùng `type: WINGS` (nhỏ gọn, mảnh, không bị phóng to như icon vật phẩm); muốn đổi cho tộc khác chỉ cần thay part `wings` tương tự. Bật/tắt toàn cục và chỉnh hiệu năng ở mục `cosmetic` trong `config.yml` (`wing-density` giảm mật độ hạt cánh). Mặc định dùng icon vật phẩm 2D; muốn cánh 3D dùng resource pack (`item-model` hoặc `custom-model-data`).
 
 ## Ghi chú vận hành
 

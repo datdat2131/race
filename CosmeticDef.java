@@ -1,5 +1,6 @@
 package me.astrax.race;
 
+import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.configuration.ConfigurationSection;
@@ -24,12 +25,37 @@ import java.util.logging.Logger;
 public final class CosmeticDef {
 
     /** FIXED = gắn cố định sau lưng (cánh...), FOLLOWER = bay lơ lửng đi theo, TAIL = chuỗi đốt như đuôi rắn. */
-    public enum Type { FIXED, FOLLOWER, TAIL }
+    public enum Type { FIXED, FOLLOWER, TAIL, WINGS }
 
     public record Flap(double amplitude, double speed, double airMultiplier) {}
 
     public record ParticleDef(Particle particle, int count, double spread, double speed, int interval,
                               String at, boolean movingOnly) {}
+
+    /** Hạt dùng để vẽ cánh bằng particle (DUST có màu, hoặc particle không cần dữ liệu như END_ROD). */
+    public record WingParticle(Particle particle, Color color, float size) {
+        static WingParticle parse(ConfigurationSection s, Logger log) {
+            if (s == null) return null;
+            Particle p;
+            try {
+                p = Particle.valueOf(s.getString("particle", "DUST").toUpperCase(Locale.ROOT));
+            } catch (IllegalArgumentException e) {
+                log.warning("Cánh particle: type không hợp lệ: " + s.getString("particle"));
+                return null;
+            }
+            if (p != Particle.DUST && p.getDataType() != Void.class) {
+                log.warning("Cánh particle: " + p + " cần dữ liệu đi kèm, không hỗ trợ.");
+                return null;
+            }
+            Color c = Color.WHITE;
+            try {
+                c = Color.fromRGB(Integer.parseInt(s.getString("color", "#FFFFFF").replace("#", "").trim(), 16));
+            } catch (Exception ignored) {
+                // dùng màu trắng
+            }
+            return new WingParticle(p, c, (float) s.getDouble("size", 1.0));
+        }
+    }
 
     public static final class Part {
         public final String name;
@@ -56,10 +82,16 @@ public final class CosmeticDef {
         public final double spacing;
         public final double wiggle;
         public final Flap flap;                 // null = không vỗ
+        public final double span;               // WINGS: sải cánh mỗi bên (block)
+        public final int fingers;               // WINGS: số ngón
+        public final double angle;              // WINGS: góc nâng cánh khi xòe (độ)
+        public final WingParticle bone;         // WINGS: xương cánh
+        public final WingParticle membrane;     // WINGS: màng cánh
+        public final WingParticle tip;          // WINGS: đầu ngón (có thể null)
         public final Display.Billboard billboard;
 
         private Part(String name, Type type, Material material, Material endMaterial,
-                     Display.Billboard billboard, ConfigurationSection s) {
+                     Display.Billboard billboard, ConfigurationSection s, Logger log) {
             this.name = name;
             this.type = type;
             this.material = material;
@@ -88,6 +120,12 @@ public final class CosmeticDef {
                     ? new Flap(s.getDouble("flap.amplitude"), s.getDouble("flap.speed", 0.2),
                     s.getDouble("flap.air-multiplier", 1.0))
                     : null;
+            this.span = Math.max(0.3, s.getDouble("span", 1.3));
+            this.fingers = Math.max(2, Math.min(6, s.getInt("fingers", 4)));
+            this.angle = s.getDouble("angle", 30.0);
+            this.bone = WingParticle.parse(s.getConfigurationSection("bone"), log);
+            this.membrane = WingParticle.parse(s.getConfigurationSection("membrane"), log);
+            this.tip = WingParticle.parse(s.getConfigurationSection("tip"), log);
         }
 
         static Part parse(String name, ConfigurationSection s, Logger log) {
@@ -99,7 +137,7 @@ public final class CosmeticDef {
                 return null;
             }
             Material m = Material.matchMaterial(s.getString("item", ""));
-            if (m == null || !m.isItem()) {
+            if (type != Type.WINGS && (m == null || !m.isItem())) {
                 log.warning("Cosmetic '" + name + "': item không hợp lệ: " + s.getString("item"));
                 return null;
             }
@@ -111,7 +149,7 @@ public final class CosmeticDef {
             } catch (IllegalArgumentException e) {
                 bb = Display.Billboard.FIXED;
             }
-            return new Part(name, type, m, end, bb, s);
+            return new Part(name, type, m, end, bb, s, log);
         }
     }
 

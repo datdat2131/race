@@ -52,6 +52,7 @@ cosmetic:
   hide-when-gliding: true    # ẩn khi đang lướt bằng Elytra
   hide-when-invisible: true  # ẩn khi người chơi tàng hình (potion)
   sneak-drop: 0.2            # hạ thấp cosmetic khi ngồi xuống (Shift)
+  wing-density: 1.0          # mật độ hạt của cánh vẽ bằng particle (type: WINGS); giảm nếu server yếu
 
 # ---------------- Nâng cấp thuộc tính ----------------
 # per-level: giá trị cộng thêm mỗi cấp nâng cấp

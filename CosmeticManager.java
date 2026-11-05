@@ -5,6 +5,7 @@ import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.Particle;
 import org.bukkit.World;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.ItemDisplay;
@@ -56,6 +57,7 @@ public final class CosmeticManager {
     private static final class CosmeticSet {
         final Race race;
         final List<Live> live = new ArrayList<>();
+        final List<CosmeticDef.Part> wings = new ArrayList<>();
         Location last;
         boolean moved;
 
@@ -140,6 +142,8 @@ public final class CosmeticManager {
                     set.live.add(l);
                     prev = l;
                 }
+            } else if (part.type == CosmeticDef.Type.WINGS) {
+                set.wings.add(part);
             } else {
                 set.live.add(create(p, part, part.material, base, 1.0, 0, null, part.scale, phase += 1.7));
                 if (part.mirror) {
@@ -335,7 +339,81 @@ public final class CosmeticManager {
             }
         }
 
-        if (!hide) emitParticles(set, w, f, basePos);
+        if (!hide) {
+            for (CosmeticDef.Part wp : set.wings) renderWings(w, wp, basePos, f, r, drop, air);
+            emitParticles(set, w, f, basePos);
+        }
+    }
+
+    // ---------------- Cánh vẽ bằng particle (WINGS) ----------------
+    private static Vector wingDir(Vector lateral, double a) {
+        return lateral.clone().multiply(Math.cos(a)).add(new Vector(0, Math.sin(a), 0));
+    }
+
+    private void spawnWing(World w, CosmeticDef.WingParticle p, Vector v) {
+        if (p == null) return;
+        if (p.particle() == Particle.DUST) {
+            w.spawnParticle(Particle.DUST, v.getX(), v.getY(), v.getZ(), 1, 0, 0, 0, 0,
+                    new Particle.DustOptions(p.color(), p.size()));
+        } else {
+            w.spawnParticle(p.particle(), v.getX(), v.getY(), v.getZ(), 1, 0, 0, 0, 0);
+        }
+    }
+
+    private void wingLine(World w, CosmeticDef.WingParticle p, Vector a, Vector b, double dens) {
+        if (p == null) return;
+        int n = Math.max(1, Math.min(14, (int) Math.ceil(a.distance(b) * dens / 0.25)));
+        for (int i = 0; i <= n; i++) {
+            double t = (double) i / n;
+            spawnWing(w, p, new Vector(a.getX() + (b.getX() - a.getX()) * t, a.getY() + (b.getY() - a.getY()) * t,
+                    a.getZ() + (b.getZ() - a.getZ()) * t));
+        }
+    }
+
+    /**
+     * Cánh rồng/dơi dựng bằng particle: xương cánh (vai → khuỷu → cổ tay) + các ngón xòe ra phía sau + màng nối giữa
+     * các ngón, vỗ nhẹ lên xuống. Nhỏ gọn (span) và mảnh hơn nhiều so với icon vật phẩm phóng to.
+     */
+    private void renderWings(World w, CosmeticDef.Part pt, Vector basePos, Vector f, Vector r, double drop, boolean air) {
+        double span = pt.span;
+        double flapOff = 0;
+        if (pt.flap != null) {
+            double speed = pt.flap.speed() * (air ? pt.flap.airMultiplier() : 1.0);
+            flapOff = Math.toRadians(pt.flap.amplitude()) * Math.sin(tickCounter * speed);
+        }
+        double base = Math.toRadians(pt.angle) + flapOff;
+        double dens = Math.max(0.3, plugin.configs().config().getDouble("cosmetic.wing-density", 1.0));
+        Vector center = basePos.clone().add(new Vector(0, pt.up - drop, 0)).subtract(f.clone().multiply(pt.back));
+        int n = pt.fingers;
+
+        for (int sgn = -1; sgn <= 1; sgn += 2) {
+            Vector lateral = r.clone().multiply(sgn);
+            Vector shoulder = center.clone().add(lateral.clone().multiply(pt.side));
+            Vector elbow = shoulder.clone().add(wingDir(lateral, base + 0.35).multiply(0.30 * span))
+                    .subtract(f.clone().multiply(0.04 * span));
+            Vector wrist = elbow.clone().add(wingDir(lateral, base + 0.05).multiply(0.30 * span))
+                    .subtract(f.clone().multiply(0.06 * span));
+            wingLine(w, pt.bone, shoulder, elbow, dens);
+            wingLine(w, pt.bone, elbow, wrist, dens);
+
+            Vector[] tips = new Vector[n];
+            for (int k = 0; k < n; k++) {
+                double ang = base - 0.28 - k * (1.2 / Math.max(1, n - 1));       // ngón sau rủ dần xuống
+                double len = span * (0.62 - 0.09 * k);
+                tips[k] = wrist.clone().add(wingDir(lateral, ang).multiply(len))
+                        .subtract(f.clone().multiply(span * (0.10 + 0.14 * k)));  // quét ra phía sau
+                wingLine(w, pt.bone, wrist, tips[k], dens);
+                if (pt.tip != null) spawnWing(w, pt.tip, tips[k]);
+            }
+            for (int k = 0; k < n - 1; k++) {
+                wingLine(w, pt.membrane, tips[k], tips[k + 1], dens);
+                Vector m1 = wrist.clone().add(tips[k].clone().subtract(wrist).multiply(0.6));
+                Vector m2 = wrist.clone().add(tips[k + 1].clone().subtract(wrist).multiply(0.6));
+                wingLine(w, pt.membrane, m1, m2, dens);
+            }
+            Vector trailing = shoulder.clone().add(new Vector(0, -0.12 * span, 0)).subtract(f.clone().multiply(0.16 * span));
+            wingLine(w, pt.membrane, tips[n - 1], trailing, dens);
+        }
     }
 
     private void emitParticles(CosmeticSet set, World w, Vector f, Vector basePos) {
