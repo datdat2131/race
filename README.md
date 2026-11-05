@@ -6,12 +6,12 @@ Plugin Paper **1.21.x** · Java **21** · Maven · layout phẳng (mọi file �
 
 ## Tính năng
 
-- **9 chủng tộc:** Human, Elf, Dwarf, Orc, Demon, Angel, Dragon, Fish (Cá), Snake (Rắn) – mỗi tộc có chỉ số, nội tại, 3–4 buff, điểm mạnh/yếu, độ hiếm.
+- **9 chủng tộc:** Human, Elf, Dwarf, Orc, Demon, Angel, Dragon, Fish (Cá), Snake (Rắn) – mỗi tộc có chỉ số, nội tại, 3–4 buff, điểm mạnh/yếu. Mọi tộc có chỉ số gốc và tỉ lệ roll ngang nhau.
 - **Buff tự động theo điều kiện**: dưới nước, dưới lòng đất, ban ngày/đêm, trong Nether/The End, trời mưa, máu thấp/đầy, đang cháy, ngồi xuống, chạy nước rút, độ cao lớn… Có thể tăng sát thương, giảm sát thương nhận, hồi máu, cấp hiệu ứng potion, hoặc kích hoạt khi hạ gục / khi bị đánh.
 - **Cấp độ**: Race Level, EXP, điểm nâng cấp; lên cấp tăng chỉ số và **mở khóa buff mới**.
-- **GUI `/race`**: danh sách tộc (hiện độ hiếm) → chi tiết (chỉ số, buff, điểm mạnh/yếu) → xác nhận. Số lần đổi tộc cấu hình được.
+- **GUI `/race`**: danh sách tộc → chi tiết (chỉ số, buff, điểm mạnh/yếu) → xác nhận. Số lần đổi tộc cấu hình được.
 - **GUI `/race upgrade`**: Strength, Defense, Speed, Health, Critical, Regen.
-- **Vé Roll Tộc**: quay ngẫu nhiên tộc theo độ hiếm, có bảo hiểm (pity), hoạt ảnh vòng quay hoành tráng.
+- **Vé Roll Tộc**: quay ngẫu nhiên tộc (tỉ lệ ngang nhau), hoạt ảnh vòng quay hoành tráng.
 - **Cosmetic nhận dạng**: cánh / vật phẩm / đuôi đi theo sau lưng (cánh rồng Ender, đàn cá, đuôi rắn…).
 - Lưu **SQLite** (mặc định) hoặc **YAML**; ghi bất đồng bộ; `/race reload` không mất dữ liệu.
 - **PlaceholderAPI** (tùy chọn). Dependency bắt buộc duy nhất: Paper.
@@ -31,7 +31,7 @@ AstraXRace-flat/
 ├─ BuffManager.java        # đánh giá điều kiện, áp buff mỗi giây, hệ số sát thương
 ├─ EffectSpec.java         # hiệu ứng potion cấu hình bằng YAML
 ├─ RaceManager.java        # tộc, level, nâng cấp, attribute, công thức sát thương
-├─ RollManager.java        # Vé Roll Tộc: độ hiếm, pity, hoạt ảnh quay
+├─ RollManager.java        # Vé Roll Tộc: hoạt ảnh quay
 ├─ GUIManager.java  RaceGuiHolder.java
 ├─ CosmeticDef.java  CosmeticManager.java   # cánh/vật phẩm đi theo (ItemDisplay)
 ├─ CommandManager.java  RaceListener.java  RacePlaceholders.java
@@ -64,7 +64,7 @@ Jar: `target/AstraXRace-1.0.0.jar`. Dependency: `paper-api` (provided) và `plac
 | `/race buffs` | Xem buff: ● đang hoạt động / ○ chưa đủ điều kiện / 🔒 chưa mở khóa | `astraxrace.use` |
 | `/race upgrade` | GUI nâng cấp | `astraxrace.use` |
 | `/race level [người]` | Xem cấp (xem người khác cần admin) | `astraxrace.use` / `astraxrace.admin` |
-| `/race roll` · `/race pity` | Dùng Vé Roll Tộc / xem vé và bảo hiểm | `astraxrace.use` |
+| `/race roll` · `/race pity` | Dùng Vé Roll Tộc / xem số vé | `astraxrace.use` |
 | `/race ticket give <người> [số]` | Phát Vé Roll Tộc | `astraxrace.admin` |
 | `/race reload` | Nạp lại cấu hình | `astraxrace.admin` |
 | `/race set <người> <race>` · `/race reset <người>` · `/race giveexp <người> <số>` | Quản trị | `astraxrace.admin` |
@@ -77,7 +77,6 @@ Quyền: `astraxrace.use` (mặc định true), `astraxrace.admin` (op), `astrax
 races:
   fish:
     display-name: '&b&lFish'
-    rarity: COMMON
     stats: {health: 18.0, speed: 0.95, strength: 1.0, jump: 0.0, knockback-resistance: 0.0, critical-chance: 0.04}
     growth: {health: 0.2, speed: 0.0004, strength: 0.005}      # cộng thêm mỗi cấp tộc
     passives:
@@ -134,16 +133,16 @@ Nhiều buff cùng hoạt động thì hệ số **nhân với nhau**, hồi má
 | `immune-effects` | danh sách hiệu ứng potion bị chặn |
 | `damage-tags` / `weak-to` | thẻ sát thương gây ra (vd `WATER`) / hệ số sát thương nhận từ thẻ đó |
 
-Khắc chế giữa 3 tộc mới: Dragon (`FIRE`) → Snake +25%; Snake (`VENOM`) → Fish +25%; Fish (`WATER`) → Dragon +25%.
+Khắc chế (cùng mức +20%): Dragon (`FIRE`) → Snake; Snake (`VENOM`) → Fish; Fish (`WATER`) → Dragon; Angel (`HOLY`) → Demon.
 
 ## Vé Roll Tộc
 
 - Phát vé: `/race ticket give <người> [số lượng]`. Người chơi **chuột phải vé** (hoặc `/race roll`) để quay.
-- Mỗi tộc có `rarity`; tỉ lệ từng độ hiếm ở `roll.rarities` (mặc định Thường 50% · Hiếm 30% · Sử thi 15% · Huyền thoại 5%): chọn độ hiếm theo trọng số rồi chọn ngẫu nhiên một tộc cùng độ hiếm.
-- **Bảo hiểm (pity)**: sau `roll.pity.epic` lượt không ra Sử thi trở lên → lượt sau chắc chắn Sử thi+; sau `roll.pity.legendary` lượt → chắc chắn Huyền thoại. Xem `/race pity`.
+- Mọi tộc có tỉ lệ roll **ngang nhau** (đã bỏ Hiếm / Sử thi / Huyền thoại và bảo hiểm pity). Nếu muốn phân hạng lại, thêm `rarity` cho từng tộc trong `races.yml` và khai báo thêm nhóm ở `roll.rarities`.
+- `/race pity` chỉ còn hiển thị số vé đang có.
 - Đã có tộc: phải **dùng vé lần 2 trong `confirm-seconds` giây** để xác nhận. Roll không tính vào số lần đổi tộc nhưng vẫn reset level/nâng cấp theo `race.reset-progress-on-change`.
 - Kết quả áp dụng ngay khi dùng vé (không né được bằng cách thoát game); hoạt ảnh chỉ để trình diễn.
-- **Hiệu ứng:** GUI vòng quay chạy chậm dần, viền đổi màu; vòng ma pháp 2 lớp + ngôi sao 6 cánh xoay quanh người, hạt hút vào, nhịp tim hồi hộp trước khi lộ kết quả; rồi cầu nổ, sóng xung kích, cột sáng, pháo hoa particle theo màu độ hiếm; Huyền thoại có sét hiệu ứng và thông báo toàn server. Chỉnh ở `roll.rarities` (`pane`, `rgb`, `fireworks`, `lightning`) và `roll.effects` (`enabled`, `density`, `suspense-ticks`).
+- **Hiệu ứng:** GUI vòng quay chạy chậm dần, viền đổi màu; vòng ma pháp 2 lớp + ngôi sao 6 cánh xoay quanh người, hạt hút vào, nhịp tim hồi hộp trước khi lộ kết quả; rồi cầu nổ, sóng xung kích, cột sáng, pháo hoa particle. Chỉnh ở `roll.rarities` (`pane`, `rgb`, `fireworks`, `lightning`) và `roll.effects` (`enabled`, `density`, `suspense-ticks`).
 
 ## PlaceholderAPI (tùy chọn)
 
@@ -187,3 +186,8 @@ Cánh rồng dùng `type: WINGS` (nhỏ gọn, mảnh, không bị phóng to nh�
 - Modifier attribute của plugin được gỡ khi người chơi thoát và khi tắt plugin → không để lại chỉ số "kẹt".
 - Nếu tải dữ liệu từ DB lỗi, plugin không ghi đè bản ghi của người chơi đó.
 - Buff được xét mỗi giây (một task duy nhất); trạng thái tạm được dọn khi người chơi thoát.
+
+## Cân bằng chủng tộc
+
+- Mọi tộc dùng chung **chỉ số gốc** (20 HP, tốc độ 1.0, sức mạnh 1.0, chí mạng 5%, không nhảy cao / kháng knockback) và **growth** như nhau; khác biệt nằm ở nội tại + buff.
+- Quy ước độ mạnh: buff "sân nhà" +15% sát thương (hoặc hồi 0.15–0.2 HP/giây), buff phụ +10%, giảm sát thương tối đa 10%, proc đòn đánh 15%, hạ gục hồi 2 HP, mỗi tộc có 1 điểm yếu cỡ -10% / +20% sát thương nhận.

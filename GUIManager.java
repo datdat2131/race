@@ -65,7 +65,8 @@ public final class GUIManager {
             }
             boolean current = d != null && r.getId().equals(d.getRace());
             List<String> lore = new ArrayList<>(r.getDescription());
-            lore.add(plugin.rolls().rarityLabel(r));
+            String rl = plugin.rolls().rarityLabel(r);
+            if (!rl.isEmpty()) lore.add(rl);
             lore.add(" ");
             lore.add(g.getString(current ? "status-current" : "status-other", ""));
             lore.addAll(g.getStringList("lore"));
@@ -85,8 +86,11 @@ public final class GUIManager {
         PlayerRaceData d = plugin.races().data(p);
 
         List<String> infoLore = new ArrayList<>(r.getDescription());
-        infoLore.add(" ");
-        infoLore.add(plugin.rolls().rarityLabel(r));
+        String rl = plugin.rolls().rarityLabel(r);
+        if (!rl.isEmpty()) {
+            infoLore.add(" ");
+            infoLore.add(rl);
+        }
         place(inv, h, g.getInt("info-slot", 4), cm().simple(r.getIcon(), r.getDisplayName(), infoLore, false), null);
 
         ConfigurationSection st = sec("gui.detail.stats");

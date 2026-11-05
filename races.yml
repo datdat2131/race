@@ -1,9 +1,10 @@
 # ============================================================
 #  AstraXRace - định nghĩa chủng tộc, nội tại và BUFF
 #
-#  stats:    health (HP, 20 = 10 tim), speed (1.0 = bình thường), strength (hệ số sát thương),
+#  stats:    (TẤT CẢ race dùng chung chỉ số gốc 20 HP / 1.0 / 1.0 / 0 / 0 / 5% - khác biệt nằm ở nội tại + buff)
+#            health (HP, 20 = 10 tim), speed (1.0 = bình thường), strength (hệ số sát thương),
 #            jump (+% độ cao nhảy, 0.2 = +20%), knockback-resistance (0..1), critical-chance (0..1)
-#  rarity:   độ hiếm khi roll bằng vé (COMMON | RARE | EPIC | LEGENDARY, cấu hình ở config.yml mục roll)
+#  (Không còn độ hiếm: mọi race có chỉ số gốc và tỉ lệ roll ngang nhau)
 #  growth:   chỉ số cộng thêm MỖI cấp race
 #  passives: nội tại luôn bật (xem README)
 #  buffs:    buff TỰ ĐỘNG khi đúng điều kiện và đủ cấp mở khóa (không cần bấm gì)
@@ -23,19 +24,18 @@ races:
     display-name: '&f&lHuman'
     icon: PLAYER_HEAD
     gui-slot: 10
-    rarity: COMMON
     description:
       - '&7Chủng tộc cân bằng, thích nghi'
       - '&7tốt với mọi hoàn cảnh.'
     stats: {health: 20.0, speed: 1.0, strength: 1.0, jump: 0.0, knockback-resistance: 0.0, critical-chance: 0.05}
-    growth: {health: 0.2, speed: 0.0005, strength: 0.005}
+    growth: {health: 0.2, speed: 0.0004, strength: 0.005}
     strengths:
       - 'Nhận thêm 10% EXP (Race EXP và EXP thường)'
-      - 'Chỉ số cân bằng, hồi phục nhẹ liên tục'
+      - 'Hồi phục nhẹ liên tục'
       - 'Máu dưới 30%: hồi phục + giảm 10% sát thương nhận'
-      - 'Máu đầy: gây thêm 8% sát thương'
+      - 'Máu đầy: gây thêm 10% sát thương'
     weaknesses:
-      - 'Không có điểm vượt trội về chỉ số'
+      - 'Không có sở trường chiến đấu riêng'
     passives:
       exp-bonus: 0.10
       vanilla-exp-bonus: 0.10
@@ -48,59 +48,57 @@ races:
         regen: 0.15
       second-wind:
         name: '&aHơi thở thứ hai'
-        description: ['Máu dưới 30%: hồi phục, kháng sát thương, giảm 10% sát thương nhận.']
+        description: ['Máu dưới 30%: Regeneration I và giảm 10% sát thương nhận.']
         condition: LOW_HEALTH
         threshold: 0.3
         unlock-level: 5
         effects:
-          - {type: REGENERATION, duration: 40, amplifier: 1}
-          - {type: RESISTANCE, duration: 40, amplifier: 0}
+          - {type: REGENERATION, duration: 40, amplifier: 0}
         defense-multiplier: 0.9
       focus:
         name: '&eTập trung'
-        description: ['Máu đầy (từ 90%): gây thêm 8% sát thương.']
+        description: ['Máu đầy (từ 90%): gây thêm 10% sát thương.']
         condition: FULL_HEALTH
         threshold: 0.9
-        unlock-level: 15
-        damage-multiplier: 1.08
+        unlock-level: 10
+        damage-multiplier: 1.10
     cosmetic:
       parts:
         shield:
           type: FIXED
           item: SHIELD
-          scale: 1.1
-          up: 1.35
-          back: 0.8
+          scale: 0.9
+          up: 1.3
+          back: 0.7
 
   elf:
     display-name: '&a&lElf'
     icon: BOW
     gui-slot: 11
-    rarity: COMMON
     description:
       - '&7Cung thủ nhanh nhẹn của rừng xanh,'
-      - '&7mong manh nhưng linh hoạt.'
-    stats: {health: 16.0, speed: 1.10, strength: 1.0, jump: 0.2, knockback-resistance: 0.0, critical-chance: 0.05}
-    growth: {health: 0.15, speed: 0.0005, strength: 0.004}
+      - '&7mạnh về cung nhưng yếu cận chiến.'
+    stats: {health: 20.0, speed: 1.0, strength: 1.0, jump: 0.0, knockback-resistance: 0.0, critical-chance: 0.05}
+    growth: {health: 0.2, speed: 0.0004, strength: 0.005}
     strengths:
-      - 'Tốc độ di chuyển +10%, nhảy cao hơn'
-      - 'Sát thương cung +20%'
-      - 'Ban ngày: chạy nhanh hơn + hồi máu'
+      - 'Sát thương cung +15%'
+      - 'Ban ngày: Speed I + hồi máu'
       - 'Ban đêm: nhìn xuyên đêm + nhảy cao'
-      - 'Chạy nước rút: tăng tốc thêm'
+      - 'Chạy nước rút: Speed II'
     weaknesses:
-      - 'Máu thấp hơn Human (-2 tim)'
+      - 'Sát thương cận chiến -10%'
     passives:
-      bow-damage-multiplier: 1.20
+      bow-damage-multiplier: 1.15
+      melee-damage-multiplier: 0.9
     buffs:
       sun-blessing:
         name: '&eÁnh dương rừng xanh'
-        description: ['Ban ngày ngoài trời: Speed I và hồi +0.2 HP/giây.']
+        description: ['Ban ngày ngoài trời: Speed I và hồi +0.15 HP/giây.']
         condition: DAY
         unlock-level: 1
         effects:
           - {type: SPEED, duration: 40, amplifier: 0}
-        regen: 0.2
+        regen: 0.15
       moonlit-grace:
         name: '&9Ân huệ ánh trăng'
         description: ['Ban đêm: nhìn xuyên đêm và nhảy cao hơn.']
@@ -122,135 +120,139 @@ races:
           type: FIXED
           item: FEATHER
           mirror: true
-          scale: 1.7
+          scale: 1.15
           side: 0.1
-          up: 1.3
-          back: 0.75
+          up: 1.25
+          back: 0.65
           tilt: 25
-          spread: 25
+          spread: 22
           pivot: 1.0
-          flap: {amplitude: 10, speed: 0.15, air-multiplier: 1.8}
+          flap: {amplitude: 9, speed: 0.15, air-multiplier: 1.6}
         bow:
           type: FIXED
           item: BOW
-          scale: 0.9
-          up: 1.1
-          back: 1.05
+          scale: 0.7
+          up: 1.05
+          back: 0.9
           tilt: 40
       particles:
-        sparkle: {type: CHERRY_LEAVES, count: 1, spread: 0.5, speed: 0, interval: 14, at: BACK, moving-only: true}
+        sparkle: {type: CHERRY_LEAVES, count: 1, spread: 0.4, speed: 0, interval: 18, at: BACK, moving-only: true}
 
   dwarf:
     display-name: '&6&lDwarf'
     icon: IRON_PICKAXE
     gui-slot: 12
-    rarity: RARE
     description:
       - '&7Chiến binh lùn bền bỉ,'
       - '&7mạnh nhất khi ở dưới lòng đất.'
-    stats: {health: 28.0, speed: 0.90, strength: 1.0, jump: 0.0, knockback-resistance: 0.5, critical-chance: 0.03}
-    growth: {health: 0.3, speed: 0.0003, strength: 0.005}
+    stats: {health: 20.0, speed: 1.0, strength: 1.0, jump: 0.0, knockback-resistance: 0.0, critical-chance: 0.05}
+    growth: {health: 0.2, speed: 0.0004, strength: 0.005}
     strengths:
-      - 'Máu +4 tim so với Human'
-      - 'Kháng knockback 50%'
-      - 'Dưới lòng đất (Y <= 50): đào nhanh, nhìn rõ, sát thương +25%'
-      - 'Khi bị đánh có 25% cơ hội kháng sát thương'
-      - 'Máu dưới 40%: giảm 20% sát thương nhận'
+      - 'Dưới lòng đất (Y <= 50): Haste I, nhìn rõ, sát thương +15%'
+      - 'Khi bị đánh có 20% cơ hội nhận Resistance I'
+      - 'Máu dưới 35%: giảm 10% sát thương nhận'
+      - 'Sát thương từ khối rơi giảm 50%'
     weaknesses:
-      - 'Tốc độ di chuyển thấp (-10%)'
+      - 'Trên cao (Y >= 100): nhận thêm 10% sát thương'
+    passives:
+      damage-taken: {FALLING_BLOCK: 0.5}
     buffs:
       deep-miner:
         name: '&6Thợ mỏ dưới lòng đất'
-        description: ['Ở độ cao Y <= 50: Haste II, nhìn xuyên đêm, sát thương +25%.']
+        description: ['Ở độ cao Y <= 50: Haste I, nhìn xuyên đêm, sát thương +15%.']
         condition: UNDERGROUND
         threshold: 50
         unlock-level: 1
         effects:
-          - {type: HASTE, duration: 40, amplifier: 1}
+          - {type: HASTE, duration: 40, amplifier: 0}
           - {type: NIGHT_VISION, duration: 260, amplifier: 0}
-        damage-multiplier: 1.25
+        damage-multiplier: 1.15
+      vertigo:
+        name: '&8Nhược điểm: chóng mặt'
+        description: ['Ở độ cao Y >= 100: nhận thêm 10% sát thương.']
+        condition: HIGH_ALTITUDE
+        threshold: 100
+        unlock-level: 1
+        defense-multiplier: 1.1
       stone-heart:
         name: '&7Tim đá'
-        description: ['Khi bị đánh có 25% cơ hội nhận Resistance II trong 4 giây.']
+        description: ['Khi bị đánh có 20% cơ hội nhận Resistance I trong 4 giây.']
         condition: ALWAYS
-        unlock-level: 8
+        unlock-level: 5
         on-hurt:
-          chance: 0.25
+          chance: 0.2
           effects:
-            - {type: RESISTANCE, duration: 80, amplifier: 1}
+            - {type: RESISTANCE, duration: 80, amplifier: 0}
       stubborn:
         name: '&cCứng đầu'
-        description: ['Máu dưới 40%: giảm 20% sát thương nhận.']
+        description: ['Máu dưới 35%: giảm 10% sát thương nhận.']
         condition: LOW_HEALTH
-        threshold: 0.4
-        unlock-level: 15
-        defense-multiplier: 0.8
+        threshold: 0.35
+        unlock-level: 10
+        defense-multiplier: 0.9
     cosmetic:
       parts:
         pickaxe:
           type: FIXED
           item: IRON_PICKAXE
-          scale: 1.1
-          up: 1.3
-          back: 0.85
+          scale: 0.85
+          up: 1.25
+          back: 0.75
           tilt: 45
         lantern:
           type: FOLLOWER
           item: LANTERN
-          scale: 0.4
-          side: 0.8
-          up: 1.9
-          back: 1.5
+          scale: 0.3
+          side: 0.7
+          up: 1.8
+          back: 1.2
           follow-speed: 0.2
-          bob: {amplitude: 0.06, speed: 0.12}
+          bob: {amplitude: 0.05, speed: 0.12}
           billboard: CENTER
       particles:
-        ember: {type: SMALL_FLAME, count: 1, spread: 0.15, speed: 0.01, interval: 10, at: BACK}
+        ember: {type: SMALL_FLAME, count: 1, spread: 0.12, speed: 0.01, interval: 14, at: BACK}
 
   orc:
     display-name: '&2&lOrc'
     icon: NETHERITE_AXE
     gui-slot: 13
-    rarity: RARE
     description:
       - '&7Chiến binh hoang dã, càng bị thương'
       - '&7càng nguy hiểm.'
-    stats: {health: 22.0, speed: 0.92, strength: 1.0, jump: 0.0, knockback-resistance: 0.1, critical-chance: 0.05}
-    growth: {health: 0.25, speed: 0.0003, strength: 0.006}
+    stats: {health: 20.0, speed: 1.0, strength: 1.0, jump: 0.0, knockback-resistance: 0.0, critical-chance: 0.05}
+    growth: {health: 0.2, speed: 0.0004, strength: 0.005}
     strengths:
-      - 'Sát thương cận chiến +15%'
-      - 'Máu dưới 35%: Strength và sát thương +25%'
-      - 'Hạ gục kẻ địch: hồi máu và tăng sức mạnh'
+      - 'Sát thương cận chiến +10%'
+      - 'Máu dưới 35%: sát thương +20%'
+      - 'Hạ gục kẻ địch: hồi 2 HP và Strength I'
       - 'Chạy nước rút: sát thương +10%'
     weaknesses:
-      - 'Tốc độ di chuyển thấp hơn (-8%)'
+      - 'Sát thương cung -10%'
     passives:
-      melee-damage-multiplier: 1.15
+      melee-damage-multiplier: 1.10
+      bow-damage-multiplier: 0.9
     buffs:
       bloodlust:
         name: '&4Khát máu'
-        description: ['Máu dưới 35%: Strength I và gây thêm 25% sát thương.']
+        description: ['Máu dưới 35%: gây thêm 20% sát thương.']
         condition: LOW_HEALTH
         threshold: 0.35
         unlock-level: 1
-        effects:
-          - {type: STRENGTH, duration: 40, amplifier: 0}
-        damage-multiplier: 1.25
+        damage-multiplier: 1.20
       blood-frenzy:
         name: '&cCuồng huyết'
-        description: ['Hạ gục: hồi 2 HP, Strength II và Speed I trong 5 giây.']
+        description: ['Hạ gục: hồi 2 HP và Strength I trong 5 giây.']
         condition: ALWAYS
-        unlock-level: 8
+        unlock-level: 5
         on-kill:
           heal: 2.0
           effects:
-            - {type: STRENGTH, duration: 100, amplifier: 1}
-            - {type: SPEED, duration: 100, amplifier: 0}
+            - {type: STRENGTH, duration: 100, amplifier: 0}
       charge:
         name: '&2Xung phong'
         description: ['Khi chạy nước rút: gây thêm 10% sát thương.']
         condition: SPRINTING
-        unlock-level: 15
+        unlock-level: 10
         damage-multiplier: 1.1
     cosmetic:
       parts:
@@ -258,46 +260,42 @@ races:
           type: FIXED
           item: NETHERITE_AXE
           mirror: true
-          scale: 1.2
-          up: 1.3
-          back: 0.85
+          scale: 0.9
+          up: 1.25
+          back: 0.75
           tilt: 40
 
   demon:
     display-name: '&c&lDemon'
     icon: NETHERRACK
     gui-slot: 14
-    rarity: EPIC
     description:
       - '&7Sinh vật địa ngục, thiêu đốt và'
       - '&7nguyền rủa kẻ thù.'
     stats: {health: 20.0, speed: 1.0, strength: 1.0, jump: 0.0, knockback-resistance: 0.0, critical-chance: 0.05}
     growth: {health: 0.2, speed: 0.0004, strength: 0.005}
     strengths:
-      - 'Đòn đánh có cơ hội gây Wither / thiêu cháy đối thủ'
+      - 'Đòn đánh có 15% cơ hội gây Wither'
       - 'Miễn nhiễm sát thương lửa & dung nham'
-      - 'Trong Nether: Strength + hồi máu'
-      - 'Ban đêm: nhanh hơn, +10% sát thương'
-      - 'Đang cháy: +30% sát thương'
-      - 'Hạ gục: hồi máu + giáp ảo'
+      - 'Trong Nether: sát thương +15% và hồi máu'
+      - 'Ban đêm: Speed I, sát thương +10%'
+      - 'Đang cháy: sát thương +15%'
+      - 'Hạ gục: hồi 2 HP và giáp ảo'
     weaknesses:
-      - 'Nhận thêm 30% sát thương từ Holy/Light (tộc Angel)'
+      - 'Nhận thêm 20% sát thương từ Holy/Light (tộc Angel)'
     passives:
       on-hit:
         - {type: WITHER, duration: 60, amplifier: 0, chance: 0.15}
-        - {type: FIRE, duration: 80, chance: 0.20}
       damage-taken: {FIRE: 0.0, FIRE_TICK: 0.0, LAVA: 0.0, HOT_FLOOR: 0.0}
-      weak-to: {HOLY: 1.3}
+      weak-to: {HOLY: 1.2}
     buffs:
       hellborn:
         name: '&cSinh ra từ địa ngục'
-        description: ['Trong Nether: Strength I, Regeneration I và hồi +0.3 HP/giây.']
+        description: ['Trong Nether: gây thêm 15% sát thương và hồi +0.2 HP/giây.']
         condition: IN_NETHER
         unlock-level: 1
-        effects:
-          - {type: STRENGTH, duration: 40, amplifier: 0}
-          - {type: REGENERATION, duration: 40, amplifier: 0}
-        regen: 0.3
+        damage-multiplier: 1.15
+        regen: 0.2
       night-stalker:
         name: '&8Kẻ săn đêm'
         description: ['Ban đêm: Speed I và gây thêm 10% sát thương.']
@@ -308,78 +306,89 @@ races:
         damage-multiplier: 1.1
       infernal-fury:
         name: '&6Cuồng nộ địa ngục'
-        description: ['Khi đang cháy: gây thêm 30% sát thương (đã miễn nhiễm sát thương lửa).']
+        description: ['Khi đang cháy: gây thêm 15% sát thương.']
         condition: ON_FIRE
         unlock-level: 10
-        damage-multiplier: 1.3
+        damage-multiplier: 1.15
       soul-harvest:
         name: '&3Thu hoạch linh hồn'
-        description: ['Hạ gục: hồi 3 HP và nhận giáp ảo.']
+        description: ['Hạ gục: hồi 2 HP và nhận giáp ảo.']
         condition: ALWAYS
-        unlock-level: 15
+        unlock-level: 8
         on-kill:
-          heal: 3.0
+          heal: 2.0
           effects:
-            - {type: ABSORPTION, duration: 200, amplifier: 1}
+            - {type: ABSORPTION, duration: 200, amplifier: 0}
     cosmetic:
       parts:
         wings:
           type: FIXED
           item: PHANTOM_MEMBRANE
           mirror: true
-          scale: 1.9
+          scale: 1.05
           side: 0.1
-          up: 1.3
-          back: 0.8
-          tilt: 30
-          spread: 35
+          up: 1.35
+          back: 0.65
+          tilt: 38
+          spread: 26
           pivot: 1.0
-          flap: {amplitude: 15, speed: 0.18, air-multiplier: 2.0}
+          flap: {amplitude: 11, speed: 0.2, air-multiplier: 1.7}
+        wings-lower:
+          type: FIXED
+          item: PHANTOM_MEMBRANE
+          mirror: true
+          scale: 0.65
+          side: 0.1
+          up: 1.1
+          back: 0.62
+          tilt: 12
+          spread: 18
+          pivot: 1.0
+          flap: {amplitude: 8, speed: 0.2, air-multiplier: 1.7}
         skull:
           type: FOLLOWER
           item: WITHER_SKELETON_SKULL
-          scale: 0.45
-          side: -0.9
-          up: 1.9
-          back: 1.5
+          scale: 0.35
+          side: -0.7
+          up: 1.8
+          back: 1.2
           follow-speed: 0.22
-          bob: {amplitude: 0.07, speed: 0.14}
+          bob: {amplitude: 0.05, speed: 0.14}
           billboard: CENTER
       particles:
-        flames: {type: FLAME, count: 2, spread: 0.3, speed: 0.01, interval: 4, at: BACK, moving-only: true}
-        souls: {type: SOUL_FIRE_FLAME, count: 1, spread: 0.2, speed: 0.01, interval: 10, at: BACK}
+        flames: {type: FLAME, count: 1, spread: 0.25, speed: 0.01, interval: 6, at: BACK, moving-only: true}
+        souls: {type: SOUL_FIRE_FLAME, count: 1, spread: 0.15, speed: 0.01, interval: 14, at: BACK}
 
   angel:
     display-name: '&e&lAngel'
     icon: FEATHER
     gui-slot: 15
-    rarity: EPIC
     description:
       - '&7Sứ giả ánh sáng, chữa lành đồng đội'
       - '&7và hóa giải bóng tối.'
-    stats: {health: 20.0, speed: 1.02, strength: 1.0, jump: 0.05, knockback-resistance: 0.0, critical-chance: 0.04}
-    growth: {health: 0.2, speed: 0.0004, strength: 0.004}
+    stats: {health: 20.0, speed: 1.0, strength: 1.0, jump: 0.0, knockback-resistance: 0.0, critical-chance: 0.05}
+    growth: {health: 0.2, speed: 0.0004, strength: 0.005}
     strengths:
-      - 'Ban ngày ngoài trời: hồi +0.4 HP/giây và Speed I'
+      - 'Ban ngày ngoài trời: Speed I và hồi +0.2 HP/giây'
       - 'Độ cao lớn (Y >= 100): rơi chậm'
-      - 'Máu đầy: kháng sát thương'
+      - 'Máu đầy: giảm 10% sát thương nhận'
       - 'Kháng Poison, Wither, Blindness, Nausea'
       - 'Sát thương Holy gây thêm sát thương lên Demon'
     weaknesses:
-      - 'Sát thương cận chiến thấp hơn (-15%)'
+      - 'Sát thương cận chiến -10%'
     passives:
-      melee-damage-multiplier: 0.85
+      melee-damage-multiplier: 0.9
       immune-effects: [POISON, WITHER, BLINDNESS, NAUSEA]
       damage-tags: [HOLY]
     buffs:
       divine-grace:
         name: '&eÂn sủng ánh sáng'
-        description: ['Ban ngày ngoài trời: Speed I và hồi +0.4 HP/giây.']
+        description: ['Ban ngày ngoài trời: Speed I và hồi +0.2 HP/giây.']
         condition: DAY
         unlock-level: 1
         effects:
           - {type: SPEED, duration: 40, amplifier: 0}
-        regen: 0.4
+        regen: 0.2
       featherfall:
         name: '&fĐôi cánh nhẹ tênh'
         description: ['Ở độ cao Y >= 100: rơi chậm như lông vũ.']
@@ -390,272 +399,237 @@ races:
           - {type: SLOW_FALLING, duration: 40, amplifier: 0}
       guardian-aura:
         name: '&bHào quang hộ vệ'
-        description: ['Máu đầy (từ 90%): Resistance I.']
+        description: ['Máu đầy (từ 90%): giảm 10% sát thương nhận.']
         condition: FULL_HEALTH
         threshold: 0.9
         unlock-level: 10
-        effects:
-          - {type: RESISTANCE, duration: 40, amplifier: 0}
+        defense-multiplier: 0.9
     cosmetic:
       parts:
         wings:
           type: FIXED
           item: FEATHER
           mirror: true
-          scale: 2.5
+          scale: 1.4
           side: 0.1
           up: 1.3
-          back: 0.8
+          back: 0.7
           tilt: 20
           spread: 20
           pivot: 1.0
-          flap: {amplitude: 14, speed: 0.14, air-multiplier: 2.2}
+          flap: {amplitude: 12, speed: 0.14, air-multiplier: 1.8}
         halo:
           type: FIXED
           item: GOLD_NUGGET
-          scale: 1.1
-          up: 2.4
+          scale: 0.8
+          up: 2.3
           back: 0.0
           pitch: 90
       particles:
-        glow: {type: END_ROD, count: 1, spread: 0.4, speed: 0.01, interval: 12, at: BACK}
+        glow: {type: END_ROD, count: 1, spread: 0.3, speed: 0.01, interval: 16, at: BACK}
 
   dragon:
     display-name: '&5&lDragon'
     icon: DRAGON_HEAD
     gui-slot: 20
-    rarity: LEGENDARY
     description:
       - '&7Hậu duệ của Ender Dragon, đôi cánh'
       - '&7bóng tối che phủ cả bầu trời.'
-    stats: {health: 26.0, speed: 0.97, strength: 1.08, jump: 0.1, knockback-resistance: 0.25, critical-chance: 0.04}
-    growth: {health: 0.3, speed: 0.0003, strength: 0.006}
+    stats: {health: 20.0, speed: 1.0, strength: 1.0, jump: 0.0, knockback-resistance: 0.0, critical-chance: 0.05}
+    growth: {health: 0.2, speed: 0.0004, strength: 0.005}
     strengths:
-      - 'Máu +3 tim so với Human'
       - 'Giảm 50% sát thương rơi, miễn nhiễm Dragon Breath'
-      - 'Đòn đánh có cơ hội thiêu cháy đối thủ'
-      - 'Độ cao lớn (Y >= 100): +20% sát thương, rơi chậm'
-      - 'Trong The End: Strength II, hồi máu, giảm 15% sát thương nhận'
-      - 'Hạ gục: hồi máu + Strength'
-      - 'Cánh rồng Ender sau lưng'
+      - 'Đòn đánh có 15% cơ hội thiêu cháy đối thủ'
+      - 'Độ cao lớn (Y >= 100): sát thương +15%, rơi chậm'
+      - 'Trong The End: sát thương +15% và hồi máu'
+      - 'Hạ gục: hồi 2 HP và Resistance I'
     weaknesses:
-      - 'Nhận thêm 25% sát thương từ Water (tộc Fish)'
-      - 'Trời mưa: nhận thêm 15% sát thương và bị chậm'
-      - 'Di chuyển nặng nề (-3% tốc độ)'
+      - 'Nhận thêm 20% sát thương từ Water (tộc Fish)'
+      - 'Trời mưa: nhận thêm 10% sát thương'
     passives:
       damage-taken: {FALL: 0.5, DRAGON_BREATH: 0.0}
-      weak-to: {WATER: 1.25}
+      weak-to: {WATER: 1.2}
       damage-tags: [FIRE]
       on-hit:
         - {type: FIRE, duration: 60, chance: 0.15}
     buffs:
       dragon-blood:
         name: '&5Huyết rồng'
-        description: ['Hạ gục: hồi 2 HP và Strength I trong 6 giây.']
+        description: ['Hạ gục: hồi 2 HP và Resistance I trong 5 giây.']
         condition: ALWAYS
         unlock-level: 1
         on-kill:
           heal: 2.0
           effects:
-            - {type: STRENGTH, duration: 120, amplifier: 0}
+            - {type: RESISTANCE, duration: 100, amplifier: 0}
+      end-power:
+        name: '&5Sức mạnh của The End'
+        description: ['Trong The End: gây thêm 15% sát thương và hồi +0.2 HP/giây.']
+        condition: IN_END
+        unlock-level: 1
+        damage-multiplier: 1.15
+        regen: 0.2
       sky-lord:
         name: '&dChúa tể bầu trời'
-        description: ['Ở độ cao Y >= 100: gây thêm 20% sát thương và rơi chậm.']
+        description: ['Ở độ cao Y >= 100: gây thêm 15% sát thương và rơi chậm.']
         condition: HIGH_ALTITUDE
         threshold: 100
         unlock-level: 5
         effects:
           - {type: SLOW_FALLING, duration: 40, amplifier: 0}
-        damage-multiplier: 1.2
-      end-power:
-        name: '&5Sức mạnh của The End'
-        description: ['Trong The End: Strength II, Regeneration I, giảm 15% sát thương nhận.']
-        condition: IN_END
-        unlock-level: 1
-        effects:
-          - {type: STRENGTH, duration: 40, amplifier: 1}
-          - {type: REGENERATION, duration: 40, amplifier: 0}
-        defense-multiplier: 0.85
+        damage-multiplier: 1.15
       rain-weakness:
         name: '&8Nhược điểm: mưa'
-        description: ['Trời mưa: nhận thêm 15% sát thương và bị chậm.']
+        description: ['Trời mưa: nhận thêm 10% sát thương.']
         condition: IN_RAIN
         unlock-level: 1
-        effects:
-          - {type: SLOWNESS, duration: 40, amplifier: 0}
-        defense-multiplier: 1.15
+        defense-multiplier: 1.1
     cosmetic:
       parts:
         wings:
           type: WINGS
-          span: 1.35
-          fingers: 4
-          side: 0.15
+          span: 1.0
+          fingers: 3
+          side: 0.12
           up: 1.3
-          back: 0.45
-          angle: 32
-          flap: {amplitude: 24, speed: 0.2, air-multiplier: 1.8}
-          bone: {particle: DUST, color: '#2B0A3D', size: 1.1}
-          membrane: {particle: DUST, color: '#7A22C9', size: 0.8}
+          back: 0.4
+          angle: 30
+          flap: {amplitude: 20, speed: 0.2, air-multiplier: 1.7}
+          bone: {particle: DUST, color: '#2B0A3D', size: 0.9}
+          membrane: {particle: DUST, color: '#7A22C9', size: 0.7}
           tip: {particle: END_ROD}
         head:
           type: FOLLOWER
           item: DRAGON_HEAD
-          scale: 0.5
-          side: 0.9
-          up: 1.9
-          back: 1.6
+          scale: 0.4
+          side: 0.7
+          up: 1.8
+          back: 1.3
           follow-speed: 0.22
-          bob: {amplitude: 0.08, speed: 0.15}
+          bob: {amplitude: 0.06, speed: 0.15}
           billboard: CENTER
       particles:
-        ender: {type: PORTAL, count: 6, spread: 0.5, speed: 0.4, interval: 6, at: BACK}
+        ender: {type: PORTAL, count: 3, spread: 0.4, speed: 0.3, interval: 8, at: BACK}
 
   fish:
     display-name: '&b&lFish'
     icon: TROPICAL_FISH
     gui-slot: 22
-    rarity: COMMON
     description:
       - '&7Sinh vật của đại dương, nhanh và'
       - '&7mạnh mẽ khi ở dưới nước.'
-    stats: {health: 18.0, speed: 0.95, strength: 1.0, jump: 0.0, knockback-resistance: 0.0, critical-chance: 0.04}
+    stats: {health: 20.0, speed: 1.0, strength: 1.0, jump: 0.0, knockback-resistance: 0.0, critical-chance: 0.05}
     growth: {health: 0.2, speed: 0.0004, strength: 0.005}
     strengths:
-      - 'Dưới nước: thở được, bơi nhanh, nhìn rõ, +20% sát thương, hồi máu'
-      - 'Trời mưa: nhanh hơn, hồi máu, +10% sát thương'
+      - 'Dưới nước: thở được, bơi nhanh, nhìn rõ, +15% sát thương, hồi máu'
+      - 'Trời mưa: Speed I, +10% sát thương, hồi máu'
       - 'Miễn nhiễm chết đuối'
       - 'Khi bị đánh có 20% cơ hội hồi phục'
       - 'Sát thương Water gây thêm sát thương lên Dragon'
     weaknesses:
-      - 'Chậm hơn trên cạn (-5% tốc độ), máu thấp hơn Human'
-      - 'Nhận thêm 25% sát thương từ Venom (tộc Snake)'
+      - 'Nhận thêm 20% sát thương từ Venom (tộc Snake)'
     passives:
       damage-taken: {DROWNING: 0.0}
       damage-tags: [WATER]
-      weak-to: {VENOM: 1.25}
+      weak-to: {VENOM: 1.2}
     buffs:
       sea-blessing:
         name: '&bPhước lành đại dương'
-        description: ['Dưới nước: thở được, bơi nhanh, nhìn rõ, +20% sát thương, hồi +0.3 HP/giây.']
+        description: ['Dưới nước: thở được, bơi nhanh, nhìn rõ, +15% sát thương, hồi +0.2 HP/giây.']
         condition: IN_WATER
         unlock-level: 1
         effects:
           - {type: WATER_BREATHING, duration: 40, amplifier: 0}
           - {type: DOLPHINS_GRACE, duration: 40, amplifier: 0}
           - {type: NIGHT_VISION, duration: 260, amplifier: 0}
-        damage-multiplier: 1.2
-        regen: 0.3
+        damage-multiplier: 1.15
+        regen: 0.2
       rain-dancer:
         name: '&3Vũ công dưới mưa'
-        description: ['Trời mưa: Speed I, +10% sát thương, hồi +0.3 HP/giây.']
+        description: ['Trời mưa: Speed I, +10% sát thương, hồi +0.15 HP/giây.']
         condition: IN_RAIN
         unlock-level: 5
         effects:
           - {type: SPEED, duration: 40, amplifier: 0}
         damage-multiplier: 1.1
-        regen: 0.3
+        regen: 0.15
       tide-surge:
         name: '&9Thủy triều dâng'
-        description: ['Khi bị đánh có 20% cơ hội nhận Regeneration II trong 4 giây.']
+        description: ['Khi bị đánh có 20% cơ hội nhận Regeneration I trong 4 giây.']
         condition: ALWAYS
         unlock-level: 10
         on-hurt:
           chance: 0.2
           effects:
-            - {type: REGENERATION, duration: 80, amplifier: 1}
+            - {type: REGENERATION, duration: 80, amplifier: 0}
     cosmetic:
       parts:
         fins:
           type: FIXED
           item: PRISMARINE_SHARD
           mirror: true
-          scale: 1.3
-          side: 0.15
+          scale: 0.9
+          side: 0.12
           up: 1.2
-          back: 0.8
+          back: 0.65
           tilt: 35
           spread: 20
           pivot: 1.0
-          flap: {amplitude: 12, speed: 0.15, air-multiplier: 1.5}
+          flap: {amplitude: 10, speed: 0.15, air-multiplier: 1.4}
         tropical:
           type: FOLLOWER
           item: TROPICAL_FISH
-          scale: 0.55
-          side: 0.8
+          scale: 0.4
+          side: 0.7
           up: 1.7
-          back: 1.3
+          back: 1.2
           follow-speed: 0.18
-          bob: {amplitude: 0.1, speed: 0.12}
-          billboard: CENTER
-        cod:
-          type: FOLLOWER
-          item: COD
-          scale: 0.55
-          side: -0.8
-          up: 1.4
-          back: 1.7
-          follow-speed: 0.16
-          bob: {amplitude: 0.1, speed: 0.1}
-          billboard: CENTER
-        salmon:
-          type: FOLLOWER
-          item: SALMON
-          scale: 0.55
-          side: 0.1
-          up: 2.1
-          back: 2.0
-          follow-speed: 0.14
-          bob: {amplitude: 0.12, speed: 0.09}
+          bob: {amplitude: 0.07, speed: 0.12}
           billboard: CENTER
       particles:
-        bubbles: {type: BUBBLE_POP, count: 2, spread: 0.4, speed: 0.01, interval: 6, at: BACK}
-        splash: {type: SPLASH, count: 3, spread: 0.3, speed: 0.01, interval: 8, at: BACK, moving-only: true}
+        bubbles: {type: BUBBLE_POP, count: 1, spread: 0.3, speed: 0.01, interval: 10, at: BACK}
 
   snake:
     display-name: '&a&lSnake'
     icon: SLIME_BALL
     gui-slot: 24
-    rarity: RARE
     description:
       - '&7Sát thủ âm thầm với nọc độc chết người,'
       - '&7đuôi rắn uốn lượn sau lưng.'
-    stats: {health: 18.0, speed: 1.08, strength: 1.05, jump: 0.0, knockback-resistance: 0.0, critical-chance: 0.08}
-    growth: {health: 0.2, speed: 0.0006, strength: 0.005}
+    stats: {health: 20.0, speed: 1.0, strength: 1.0, jump: 0.0, knockback-resistance: 0.0, critical-chance: 0.05}
+    growth: {health: 0.2, speed: 0.0004, strength: 0.005}
     strengths:
-      - 'Tốc độ di chuyển +8%, tỉ lệ chí mạng cao'
-      - '35% cơ hội gây Poison khi đánh trúng'
+      - '15% cơ hội gây Poison khi đánh trúng'
       - 'Miễn nhiễm Poison'
-      - 'Ban đêm: nhanh, nhìn rõ, +20% sát thương'
+      - 'Ban đêm: Speed I, nhìn rõ, +15% sát thương'
       - 'Ngồi xuống: tàng hình'
-      - 'Hạ gục: hồi máu + tăng tốc'
-      - 'Máu dưới 30%: tăng tốc mạnh, giảm 15% sát thương nhận'
+      - 'Hạ gục: hồi 2 HP và Speed II'
+      - 'Máu dưới 30%: Speed II, giảm 10% sát thương nhận'
     weaknesses:
-      - 'Máu thấp hơn Human (-1 tim)'
-      - 'Nhận thêm 25% sát thương từ Fire (tộc Dragon)'
+      - 'Nhận thêm 20% sát thương từ Fire (tộc Dragon)'
     passives:
       on-hit:
-        - {type: POISON, duration: 80, amplifier: 0, chance: 0.35}
+        - {type: POISON, duration: 80, amplifier: 0, chance: 0.15}
       immune-effects: [POISON]
       damage-tags: [VENOM]
-      weak-to: {FIRE: 1.25}
+      weak-to: {FIRE: 1.2}
     buffs:
       night-hunter:
         name: '&aThợ săn đêm'
-        description: ['Ban đêm: Speed II, nhìn xuyên đêm, +20% sát thương.']
+        description: ['Ban đêm: Speed I, nhìn xuyên đêm, +15% sát thương.']
         condition: NIGHT
         unlock-level: 1
         effects:
-          - {type: SPEED, duration: 40, amplifier: 1}
+          - {type: SPEED, duration: 40, amplifier: 0}
           - {type: NIGHT_VISION, duration: 260, amplifier: 0}
-        damage-multiplier: 1.2
+        damage-multiplier: 1.15
       venom-glands:
         name: '&2Tuyến nọc độc'
-        description: ['Hạ gục: hồi 1.5 HP và Speed II trong 4 giây.']
+        description: ['Hạ gục: hồi 2 HP và Speed II trong 4 giây.']
         condition: ALWAYS
         unlock-level: 5
         on-kill:
-          heal: 1.5
+          heal: 2.0
           effects:
             - {type: SPEED, duration: 80, amplifier: 1}
       shadow-crawl:
@@ -667,26 +641,26 @@ races:
           - {type: INVISIBILITY, duration: 40, amplifier: 0}
       coil-reflex:
         name: '&aPhản xạ cuộn mình'
-        description: ['Máu dưới 30%: Speed III và giảm 15% sát thương nhận.']
+        description: ['Máu dưới 30%: Speed II và giảm 10% sát thương nhận.']
         condition: LOW_HEALTH
         threshold: 0.3
         unlock-level: 12
         effects:
-          - {type: SPEED, duration: 40, amplifier: 2}
-        defense-multiplier: 0.85
+          - {type: SPEED, duration: 40, amplifier: 1}
+        defense-multiplier: 0.9
     cosmetic:
       parts:
         tail:
           type: TAIL
           item: LIME_DYE
           end-item: FERMENTED_SPIDER_EYE
-          segments: 9
-          spacing: 0.32
-          scale: 0.8
-          end-scale: 0.35
+          segments: 7
+          spacing: 0.28
+          scale: 0.6
+          end-scale: 0.3
           up: 0.6
-          back: 0.75
-          wiggle: 0.18
+          back: 0.65
+          wiggle: 0.15
           billboard: CENTER
       particles:
-        venom: {type: ITEM_SLIME, count: 1, spread: 0.1, speed: 0, interval: 6, at: TAIL_END, moving-only: true}
+        venom: {type: ITEM_SLIME, count: 1, spread: 0.1, speed: 0, interval: 10, at: TAIL_END, moving-only: true}

@@ -29,7 +29,7 @@ import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * Vé roll tộc: dùng vé → quay ngẫu nhiên một chủng tộc theo độ hiếm (COMMON → LEGENDARY) có hệ thống bảo hiểm (pity).
+ * Vé roll tộc: dùng vé → quay ngẫu nhiên một chủng tộc theo độ hiếm (mặc định: mọi tộc ngang nhau, không phân hạng; vẫn hỗ trợ nhiều độ hiếm nếu tự cấu hình lại).
  * Kết quả được quyết định và áp dụng NGAY khi dùng vé (không thể thoát game để né); toàn bộ hoạt ảnh chỉ là trình diễn:
  * GUI vòng quay đổi màu, vòng ma pháp + hạt hút vào quanh người chơi, nhịp tim hồi hộp, rồi nổ hiệu ứng theo độ hiếm.
  */
@@ -99,6 +99,7 @@ public final class RollManager {
     /** Dòng "Độ hiếm: ..." hiển thị trong GUI. */
     public String rarityLabel(Race r) {
         Map<String, Rarity> m = rarities();
+        if (m.size() <= 1) return "";   // chỉ có 1 độ hiếm = không phân hạng, ẩn dòng này
         Rarity ra = m.get(rarityKey(r, m));
         return plugin.configs().raw("rarity-label", "color", ra.color(), "name", ra.name());
     }
@@ -106,6 +107,7 @@ public final class RollManager {
     /** Tên độ hiếm (không màu), dùng cho placeholder. */
     public String rarityName(Race r) {
         Map<String, Rarity> m = rarities();
+        if (m.size() <= 1) return "";
         return m.get(rarityKey(r, m)).name();
     }
 
@@ -447,14 +449,15 @@ public final class RollManager {
             return;
         }
         ConfigManager cm = plugin.configs();
-        String rarityText = ra.color() + ra.name();
+        boolean tiered = rarities().size() > 1;      // 1 độ hiếm = không phân hạng
+        String rarityText = tiered ? ra.color() + ra.name() : "";
+        String banner = tiered ? ra.color() + "★ " + ra.name().toUpperCase(Locale.ROOT) + " ★"
+                : cm.raw("roll-banner");
 
         // GUI: viền đổi sang màu độ hiếm, biểu ngữ độ hiếm
         paintBorder(inv, 0, ra.pane());
-        inv.setItem(4, cm.simple(Material.NETHER_STAR, ra.color() + "★ " + ra.name().toUpperCase(Locale.ROOT) + " ★",
-                List.of(result.getDisplayName()), true));
-        inv.setItem(22, cm.simple(Material.NETHER_STAR, ra.color() + "★ " + ra.name().toUpperCase(Locale.ROOT) + " ★",
-                List.of(result.getDisplayName()), true));
+        inv.setItem(4, cm.simple(Material.NETHER_STAR, banner, List.of(result.getDisplayName()), true));
+        inv.setItem(22, cm.simple(Material.NETHER_STAR, banner, List.of(result.getDisplayName()), true));
         inv.setItem(13, reelItem(result, rarities(), true));
 
         // Âm thanh + tiêu đề

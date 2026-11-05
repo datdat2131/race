@@ -52,7 +52,7 @@ cosmetic:
   hide-when-gliding: true    # ẩn khi đang lướt bằng Elytra
   hide-when-invisible: true  # ẩn khi người chơi tàng hình (potion)
   sneak-drop: 0.2            # hạ thấp cosmetic khi ngồi xuống (Shift)
-  wing-density: 1.0          # mật độ hạt của cánh vẽ bằng particle (type: WINGS); giảm nếu server yếu
+  wing-density: 0.8          # mật độ hạt của cánh vẽ bằng particle (type: WINGS); giảm nếu server yếu
 
 # ---------------- Nâng cấp thuộc tính ----------------
 # per-level: giá trị cộng thêm mỗi cấp nâng cấp
@@ -210,8 +210,8 @@ gui:
       name: '&cĐóng'
 
 # ---------------- Vé roll tộc ----------------
-# Dùng vé (chuột phải hoặc /race roll) → quay ngẫu nhiên một chủng tộc theo độ hiếm.
-# Độ hiếm của từng tộc khai báo trong races.yml (rarity). Thứ tự khai báo = thứ hạng (thấp → cao).
+# Dùng vé (chuột phải hoặc /race roll) → quay ngẫu nhiên một chủng tộc. Mọi tộc có tỉ lệ NGANG NHAU
+# (không còn Hiếm / Sử thi / Huyền thoại, không còn bảo hiểm pity).
 roll:
   enabled: true
   title: '&8Roll Chủng Tộc'
@@ -221,15 +221,8 @@ roll:
   confirm-seconds: 8
   exclude-current: true         # không roll trúng đúng tộc đang có
   progress-reset: true          # (dùng race.reset-progress-on-change) đổi tộc bằng vé có reset level/nâng cấp
-  pity:                         # bảo hiểm: sau N lượt không ra thì lượt kế tiếp chắc chắn ra (0 = tắt)
-    epic: 25                    # chắc chắn ra EPIC trở lên
-    legendary: 80               # chắc chắn ra LEGENDARY
-  rarities:                     # name, color (mã &), weight (tỉ lệ), sound (âm thanh lộ kết quả), broadcast (thông báo toàn server)
-                                # pane (màu viền GUI), rgb (màu hạt), fireworks (số đợt pháo hoa), lightning (sét hiệu ứng)
-    COMMON:    {name: 'Thường',      color: '&f', weight: 50, sound: entity.experience_orb.pickup, broadcast: false, pane: WHITE_STAINED_GLASS_PANE,  rgb: '#FFFFFF', fireworks: 0, lightning: false}
-    RARE:      {name: 'Hiếm',        color: '&9', weight: 30, sound: entity.player.levelup,         broadcast: false, pane: LIGHT_BLUE_STAINED_GLASS_PANE, rgb: '#4DA6FF', fireworks: 1, lightning: false}
-    EPIC:      {name: 'Sử thi',      color: '&5', weight: 15, sound: ui.toast.challenge_complete,   broadcast: false, pane: PURPLE_STAINED_GLASS_PANE, rgb: '#B04DFF', fireworks: 3, lightning: false}
-    LEGENDARY: {name: 'Huyền thoại', color: '&6', weight: 5,  sound: ui.toast.challenge_complete,   broadcast: true,  pane: ORANGE_STAINED_GLASS_PANE, rgb: '#FFB300', fireworks: 6, lightning: true}
+  rarities:                     # chỉ 1 nhóm duy nhất; mọi tộc đều thuộc nhóm này (hiệu ứng lộ kết quả lấy từ đây)
+    COMMON: {name: 'Tộc', color: '&f', weight: 1, sound: entity.player.levelup, broadcast: false, pane: WHITE_STAINED_GLASS_PANE, rgb: '#FFFFFF', fireworks: 2, lightning: false}
   effects:                      # hiệu ứng lúc quay (vòng ma pháp, hạt hút vào, nhịp tim, nổ theo độ hiếm)
     enabled: true
     density: 1.0                # 0.2 - 3.0, giảm nếu server yếu
@@ -241,9 +234,8 @@ ticket:
   lore:
     - '&7Chuột phải để quay ngẫu nhiên một chủng tộc.'
     - ' '
-    - '&8Thường &f50% &8• Hiếm &930% &8• Sử thi &515% &8• Huyền thoại &65%'
-    - '&8Bảo hiểm: Sử thi sau 25 lượt, Huyền thoại sau 80 lượt'
-    - '&8Kiểm tra bảo hiểm: /race pity'
+    - '&8Mọi chủng tộc có tỉ lệ ngang nhau.'
+    - '&8Kiểm tra số vé: /race pity'
   glow: true
 
 placeholders:

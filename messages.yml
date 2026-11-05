@@ -52,12 +52,13 @@ help:
   - '&e/race buffs &7- Xem buff của tộc (đang hoạt động / chưa đủ điều kiện)'
   - '&e/race upgrade &7- Nâng cấp thuộc tính'
   - '&e/race roll &7- Dùng Vé Roll Tộc (hoặc chuột phải vé)'
-  - '&e/race pity &7- Xem số vé và bảo hiểm roll'
+  - '&e/race pity &7- Xem số vé roll đang có'
   - '&e/race level [người] &7- Xem cấp'
   - '&c/race reload | set <người> <race> | reset <người> | giveexp <người> <số> | ticket give <người> [số]'
 
 # ---------------- Vé roll tộc ----------------
 rarity-label: '&7Độ hiếm: {color}{name}'
+roll-banner: '&6★ KẾT QUẢ ★'
 roll-spin: '&8▶ {race} &8◀'
 roll-disabled: '&cTính năng roll tộc đang tắt.'
 roll-no-ticket: '&cBạn không có &6Vé Roll Tộc&c.'
@@ -65,15 +66,13 @@ roll-busy: '&cBạn đang quay, hãy đợi kết quả.'
 roll-confirm: '&eBạn đang là {race}&e. Roll sẽ &cthay thế&e tộc hiện tại! Dùng vé lần nữa trong &f{seconds}s &eđể xác nhận.'
 roll-title: '{race}'
 roll-subtitle: '{rarity}'
-roll-result: '&aBạn đã quay trúng {race} &7({rarity}&7)&a!'
-roll-broadcast: '&e{player} &7vừa quay trúng {race} &7({rarity}&7)&7!'
+roll-result: '&aBạn đã quay trúng {race}&a!'
+roll-broadcast: '&e{player} &7vừa quay trúng {race}&7!'
 ticket-given: '&aĐã đưa &e{amount} &avé roll cho &e{player}&a.'
 ticket-received: '&aBạn nhận được &e{amount} &6Vé Roll Tộc&a. Chuột phải vé để quay!'
 pity-info:
   - '&8&m   &6 Roll tộc &8&m   '
   - '&7Số vé đang có: &e{tickets}'
-  - '&7Bảo hiểm Sử thi: &f{epic}&7/&f{epic_max} &8(chắc chắn khi đạt ngưỡng)'
-  - '&7Bảo hiểm Huyền thoại: &f{legend}&7/&f{legend_max}'
 
 # ---------------- Buff ----------------
 buff-unlocked: '&dMở khóa buff mới: &r{buff}'

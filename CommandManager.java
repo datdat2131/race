@@ -203,9 +203,7 @@ public final class CommandManager implements CommandExecutor, TabCompleter {
         }
         var c = plugin.configs().config();
         cm().sendList(p, "pity-info",
-                "tickets", String.valueOf(plugin.rolls().ticketCount(p)),
-                "epic", String.valueOf(d.getPityEpic()), "epic_max", String.valueOf(c.getInt("roll.pity.epic", 0)),
-                "legend", String.valueOf(d.getPityLegend()), "legend_max", String.valueOf(c.getInt("roll.pity.legendary", 0)));
+                "tickets", String.valueOf(plugin.rolls().ticketCount(p)));
     }
 
     private void ticket(CommandSender sender, String[] args) {
